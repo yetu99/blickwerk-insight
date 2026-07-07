@@ -1,5 +1,6 @@
 import { LayoutDashboard, Factory, Activity, Settings, HelpCircle } from "lucide-react";
-import { LINE } from "@/lib/mock-data";
+import logoUrl from "@/assets/symplify-logo.svg";
+import type { Line } from "@/lib/mock-data";
 
 const nav = [
   { label: "Übersicht", icon: LayoutDashboard, active: true },
@@ -8,16 +9,18 @@ const nav = [
   { label: "Einstellungen", icon: Settings, active: false },
 ];
 
-export function BlickWerkSidebar() {
+export function BlickWerkSidebar({ activeLine }: { activeLine: Line }) {
   return (
     <aside className="hidden md:flex w-64 shrink-0 flex-col bg-sidebar text-sidebar-foreground">
       <div className="px-5 py-6 border-b border-sidebar-border">
-        <div className="flex items-center gap-2">
-          <div className="h-8 w-8 rounded-md bg-primary flex items-center justify-center">
-            <span className="text-primary-foreground font-bold text-sm">BW</span>
-          </div>
-          <div>
-            <div className="font-semibold tracking-tight">BlickWerk</div>
+        <div className="flex items-center gap-3">
+          <img
+            src={logoUrl}
+            alt="symplify"
+            className="h-9 w-9 rounded-md bg-white p-1 shrink-0"
+          />
+          <div className="min-w-0">
+            <div className="font-semibold tracking-tight text-base">symplify</div>
             <div className="text-[11px] uppercase tracking-wider text-sidebar-foreground/60">
               Prozess-Intelligenz
             </div>
@@ -46,9 +49,9 @@ export function BlickWerkSidebar() {
           <div className="text-[11px] uppercase tracking-wider text-sidebar-foreground/60 mb-1">
             Aktive Linie
           </div>
-          <div className="text-sm font-medium">{LINE.name}</div>
+          <div className="text-sm font-medium">{activeLine.name}</div>
           <div className="text-xs text-sidebar-foreground/60 mt-0.5">
-            {LINE.location} · {LINE.camera_id}
+            {activeLine.location} · {activeLine.camera_id}
           </div>
           <div className="mt-2 flex items-center gap-1.5">
             <span className="h-1.5 w-1.5 rounded-full bg-primary animate-pulse" />

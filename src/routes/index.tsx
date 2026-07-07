@@ -1,23 +1,32 @@
+import { useMemo, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
-import { Activity, Clock, AlertTriangle, PowerOff, ChevronDown } from "lucide-react";
+import { Activity, Clock, AlertTriangle, PowerOff } from "lucide-react";
 import { BlickWerkSidebar } from "@/components/blickwerk/sidebar";
+import { HeaderControls } from "@/components/blickwerk/header-controls";
 import { KpiTile } from "@/components/blickwerk/kpi-tile";
 import { CycleTimeChart } from "@/components/blickwerk/cycle-time-chart";
 import { CategoryDistribution } from "@/components/blickwerk/category-distribution";
 import { EventFeed } from "@/components/blickwerk/event-feed";
 import { ChatPanel } from "@/components/blickwerk/chat-panel";
-import { SEED, computeKpis, LINE } from "@/lib/mock-data";
+import {
+  LINES,
+  RANGE_PRESETS,
+  getSeed,
+  computeKpis,
+  filterByRange,
+  type RangePresetId,
+} from "@/lib/mock-data";
 
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "BlickWerk – Prozess-Intelligenz für die Fertigung" },
+      { title: "symplify – Prozess-Intelligenz für die Fertigung" },
       {
         name: "description",
         content:
           "Kontinuierliches, kamerabasiertes Qualitäts-Dashboard für Fertigungslinien. Zykluszeiten, Fehlerereignisse und Prozesskategorien auf einen Blick.",
       },
-      { property: "og:title", content: "BlickWerk – Prozess-Intelligenz" },
+      { property: "og:title", content: "symplify – Prozess-Intelligenz" },
       {
         property: "og:description",
         content: "Live-Dashboard für Zykluszeiten, Fehler und Stillstandzeiten im Mittelstand.",
@@ -28,20 +37,40 @@ export const Route = createFileRoute("/")({
 });
 
 function Dashboard() {
-  const kpis = computeKpis(SEED.cycles, SEED.events);
+  const [lineId, setLineId] = useState<string>(LINES[0].id);
+  const [presetId, setPresetId] = useState<RangePresetId>("2h");
+
+  const seed = getSeed(lineId);
+  const range = useMemo(
+    () => (RANGE_PRESETS.find((p) => p.id === presetId) ?? RANGE_PRESETS[0]).compute(),
+    [presetId],
+  );
+
+  const cycles = useMemo(
+    () => filterByRange(seed.cycles, range.from, range.to),
+    [seed.cycles, range.from, range.to],
+  );
+  const events = useMemo(
+    () => filterByRange(seed.events, range.from, range.to),
+    [seed.events, range.from, range.to],
+  );
+
+  const kpis = computeKpis(cycles, events);
+  const activeLine = seed.line;
+
+  const rangeLabel = RANGE_PRESETS.find((p) => p.id === presetId)?.label ?? "";
   const now = new Date();
 
   return (
     <div className="flex min-h-screen w-full bg-background">
-      <BlickWerkSidebar />
+      <BlickWerkSidebar activeLine={activeLine} />
 
       <main className="flex-1 min-w-0 flex flex-col">
-        {/* Header */}
-        <header className="border-b border-border bg-card px-6 py-4 flex items-center justify-between">
+        <header className="border-b border-border bg-card px-6 py-4 flex items-center justify-between gap-4 flex-wrap">
           <div>
             <h1 className="text-lg font-semibold text-foreground">Übersicht</h1>
             <p className="text-xs text-muted-foreground mt-0.5">
-              Live-Analyse · letzte 2 Stunden ·{" "}
+              Live-Analyse · {rangeLabel} ·{" "}
               {now.toLocaleString("de-DE", {
                 day: "2-digit",
                 month: "2-digit",
@@ -52,10 +81,12 @@ function Dashboard() {
             </p>
           </div>
           <div className="flex items-center gap-3">
-            <button className="inline-flex items-center gap-2 rounded-md border border-border bg-background px-3 py-1.5 text-sm text-foreground hover:border-primary/50">
-              {LINE.name}
-              <ChevronDown className="h-3.5 w-3.5 text-muted-foreground" />
-            </button>
+            <HeaderControls
+              lineId={lineId}
+              onLineChange={setLineId}
+              presetId={presetId}
+              onPresetChange={setPresetId}
+            />
             <div className="hidden sm:flex items-center gap-1.5 text-xs text-success">
               <span className="h-2 w-2 rounded-full bg-success animate-pulse" />
               Kamera aktiv
@@ -64,7 +95,6 @@ function Dashboard() {
         </header>
 
         <div className="flex-1 p-6 space-y-6">
-          {/* KPI Row */}
           <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             <KpiTile
               label="Durchsatz"
@@ -98,18 +128,16 @@ function Dashboard() {
             />
           </section>
 
-          {/* Charts Row */}
           <section className="grid grid-cols-1 lg:grid-cols-3 gap-4">
             <div className="lg:col-span-2">
-              <CycleTimeChart cycles={SEED.cycles} />
+              <CycleTimeChart cycles={cycles} />
             </div>
-            <CategoryDistribution events={SEED.events} />
+            <CategoryDistribution events={events} />
           </section>
 
-          {/* Bottom Row */}
           <section className="grid grid-cols-1 lg:grid-cols-3 gap-4">
             <div className="lg:col-span-2">
-              <EventFeed events={SEED.events} />
+              <EventFeed events={events} />
             </div>
             <ChatPanel />
           </section>

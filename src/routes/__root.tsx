@@ -77,13 +77,13 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "BlickWerk – Prozess-Intelligenz für die Fertigung" },
+      { title: "symplify – Prozess-Intelligenz für die Fertigung" },
       {
         name: "description",
         content:
           "Kontinuierliches, kamerabasiertes Qualitäts-Dashboard für Fertigungslinien im Mittelstand.",
       },
-      { property: "og:title", content: "BlickWerk – Prozess-Intelligenz" },
+      { property: "og:title", content: "symplify – Prozess-Intelligenz" },
       {
         property: "og:description",
         content:

@@ -63,7 +63,10 @@ export interface ProcessEvent {
   cluster_source: ClusterSource;
   confidence: number;
   human_checkpoint_required: boolean;
+  video_timestamp_start?: number;
+  video_timestamp_end?: number;
 }
+
 
 
 export const CATEGORY_LABELS: Record<EventCategory, string> = {

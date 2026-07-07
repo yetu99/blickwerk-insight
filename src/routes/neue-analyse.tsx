@@ -192,27 +192,36 @@ function NeueAnalyse() {
                     className="hidden"
                     onChange={(e) => onSelectFile(e.target.files?.[0] ?? null)}
                   />
-                  {file ? (
+                  {prepared ? (
                     <div className="flex items-center justify-center gap-3">
                       <Film className="h-6 w-6 text-primary" />
                       <div className="text-left">
                         <div className="text-sm font-medium text-foreground">
-                          {file.name}
+                          {prepared.file.name}
+                          <span className="text-muted-foreground font-normal">
+                            {" · "}
+                            {formatDuration(prepared.durationSec)}
+                          </span>
                         </div>
                         <div className="text-xs text-muted-foreground">
-                          {formatSize(file.size)}
+                          {formatSize(prepared.file.size)}
                         </div>
                       </div>
                       <button
                         onClick={(e) => {
                           e.stopPropagation();
-                          setFile(null);
+                          clearFile();
                         }}
                         className="ml-3 p-1 rounded hover:bg-muted"
                         aria-label="Datei entfernen"
                       >
                         <X className="h-4 w-4 text-muted-foreground" />
                       </button>
+                    </div>
+                  ) : probing ? (
+                    <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                      Video-Metadaten werden gelesen...
                     </div>
                   ) : (
                     <>
@@ -225,6 +234,7 @@ function NeueAnalyse() {
                       </p>
                     </>
                   )}
+
                 </div>
               </section>
 

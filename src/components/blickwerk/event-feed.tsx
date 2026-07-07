@@ -106,7 +106,7 @@ export function EventFeed({ events }: { events: ProcessEvent[] }) {
                       {formatTime(e.timestamp)}
                     </div>
                     <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 mb-1">
+                      <div className="flex items-center gap-2 mb-1 flex-wrap">
                         <span
                           className={`px-1.5 py-0.5 rounded text-[10px] font-medium border ${CATEGORY_COLOR[e.category]}`}
                         >
@@ -117,7 +117,13 @@ export function EventFeed({ events }: { events: ProcessEvent[] }) {
                         >
                           {SEVERITY_STYLES[e.severity].label}
                         </span>
+                        {e.human_checkpoint_required && (
+                          <span className="px-1.5 py-0.5 rounded text-[10px] font-medium bg-warning/15 text-warning-foreground border border-warning/50">
+                            Rückfrage nötig
+                          </span>
+                        )}
                       </div>
+
                       <p className="text-sm text-foreground truncate">{e.description}</p>
                     </div>
                   </div>

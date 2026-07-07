@@ -180,11 +180,12 @@ const LINE_CONFIG: Record<string, LineConfig> = {
   },
 };
 
-interface Seed {
+export interface Seed {
   line: Line;
   cycles: Cycle[];
   events: ProcessEvent[];
 }
+
 
 const CATEGORIES: EventCategory[] = [
   "Fehlgriff",

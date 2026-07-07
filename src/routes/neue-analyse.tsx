@@ -295,7 +295,7 @@ function NeueAnalyse() {
                       Analyse läuft
                     </h2>
                     <p className="text-xs text-muted-foreground">
-                      {file?.name} · {activeLine.name}
+                      {prepared?.file.name} · {activeLine.name}
                     </p>
                   </div>
                 </div>

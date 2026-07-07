@@ -19,7 +19,8 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { LINES, generateRun } from "@/lib/mock-data";
-import { setRun } from "@/lib/runs-store";
+import { setRun, setVideo } from "@/lib/runs-store";
+
 
 export const Route = createFileRoute("/neue-analyse")({
   head: () => ({
@@ -49,10 +50,23 @@ function formatSize(bytes: number) {
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 }
 
+function formatDuration(sec: number) {
+  const m = Math.floor(sec / 60);
+  const s = Math.floor(sec % 60);
+  return `${m}:${s.toString().padStart(2, "0")} min`;
+}
+
+interface PreparedFile {
+  file: File;
+  url: string;
+  durationSec: number;
+}
+
 function NeueAnalyse() {
   const navigate = useNavigate();
   const inputRef = useRef<HTMLInputElement>(null);
-  const [file, setFile] = useState<File | null>(null);
+  const [prepared, setPrepared] = useState<PreparedFile | null>(null);
+  const [probing, setProbing] = useState(false);
   const [lineId, setLineId] = useState<string>(LINES[0].id);
   const [dragOver, setDragOver] = useState(false);
   const [running, setRunning] = useState(false);
@@ -63,31 +77,72 @@ function NeueAnalyse() {
   useEffect(() => {
     if (!running) return;
     if (stage >= STAGES.length) {
-      // finalize
-      const seed = generateRun(lineId);
+      if (!prepared) return;
+      const seed = generateRun(lineId, prepared.durationSec);
+      setVideo(lineId, {
+        url: prepared.url,
+        durationSec: prepared.durationSec,
+        filename: prepared.file.name,
+        sizeBytes: prepared.file.size,
+      });
       setRun(lineId, seed);
       const t = setTimeout(() => navigate({ to: "/" }), 600);
       return () => clearTimeout(t);
     }
     const t = setTimeout(() => setStage((s) => s + 1), 1700);
     return () => clearTimeout(t);
-  }, [running, stage, lineId, navigate]);
+  }, [running, stage, lineId, navigate, prepared]);
 
   const onSelectFile = (f: File | null) => {
     if (!f) return;
     if (!/\.(mp4|mov|m4v|quicktime)$/i.test(f.name) && !f.type.startsWith("video/")) {
       return;
     }
-    setFile(f);
+    setProbing(true);
+    // Read real duration from browser metadata before enabling start.
+    const url = URL.createObjectURL(f);
+    const video = document.createElement("video");
+    video.preload = "metadata";
+    video.src = url;
+    const cleanup = () => {
+      video.onloadedmetadata = null;
+      video.onerror = null;
+    };
+    video.onloadedmetadata = () => {
+      const duration = Number.isFinite(video.duration) && video.duration > 0
+        ? video.duration
+        : 60; // fallback so demo still works
+      setPrepared({ file: f, url, durationSec: duration });
+      setProbing(false);
+      cleanup();
+    };
+    video.onerror = () => {
+      // Fall back to a plausible default; still usable for demo.
+      setPrepared({ file: f, url, durationSec: 60 });
+      setProbing(false);
+      cleanup();
+    };
+  };
+
+  const clearFile = () => {
+    if (prepared) {
+      try {
+        URL.revokeObjectURL(prepared.url);
+      } catch {
+        /* noop */
+      }
+    }
+    setPrepared(null);
   };
 
   const start = () => {
-    if (!file) return;
+    if (!prepared) return;
     setStage(0);
     setRunning(true);
   };
 
   const progress = running ? Math.min(100, (stage / STAGES.length) * 100) : 0;
+
 
   return (
     <div className="flex min-h-screen w-full bg-background">
@@ -137,27 +192,36 @@ function NeueAnalyse() {
                     className="hidden"
                     onChange={(e) => onSelectFile(e.target.files?.[0] ?? null)}
                   />
-                  {file ? (
+                  {prepared ? (
                     <div className="flex items-center justify-center gap-3">
                       <Film className="h-6 w-6 text-primary" />
                       <div className="text-left">
                         <div className="text-sm font-medium text-foreground">
-                          {file.name}
+                          {prepared.file.name}
+                          <span className="text-muted-foreground font-normal">
+                            {" · "}
+                            {formatDuration(prepared.durationSec)}
+                          </span>
                         </div>
                         <div className="text-xs text-muted-foreground">
-                          {formatSize(file.size)}
+                          {formatSize(prepared.file.size)}
                         </div>
                       </div>
                       <button
                         onClick={(e) => {
                           e.stopPropagation();
-                          setFile(null);
+                          clearFile();
                         }}
                         className="ml-3 p-1 rounded hover:bg-muted"
                         aria-label="Datei entfernen"
                       >
                         <X className="h-4 w-4 text-muted-foreground" />
                       </button>
+                    </div>
+                  ) : probing ? (
+                    <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                      Video-Metadaten werden gelesen...
                     </div>
                   ) : (
                     <>
@@ -170,6 +234,7 @@ function NeueAnalyse() {
                       </p>
                     </>
                   )}
+
                 </div>
               </section>
 
@@ -212,7 +277,7 @@ function NeueAnalyse() {
               <div className="flex justify-end">
                 <button
                   onClick={start}
-                  disabled={!file}
+                  disabled={!prepared}
                   className="inline-flex items-center gap-2 rounded-md bg-primary px-5 py-2.5 text-sm font-medium text-primary-foreground shadow-sm hover:bg-primary/90 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
                 >
                   <UploadIcon className="h-4 w-4" />
@@ -230,7 +295,7 @@ function NeueAnalyse() {
                       Analyse läuft
                     </h2>
                     <p className="text-xs text-muted-foreground">
-                      {file?.name} · {activeLine.name}
+                      {prepared?.file.name} · {activeLine.name}
                     </p>
                   </div>
                 </div>

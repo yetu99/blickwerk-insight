@@ -21,7 +21,10 @@ export interface Cycle {
   end_ts: number;
   duration_sec: number;
   status: "ok" | "error";
+  video_timestamp_start?: number;
+  video_timestamp_end?: number;
 }
+
 
 export type ClusterSource =
   | "waiting"
@@ -60,7 +63,10 @@ export interface ProcessEvent {
   cluster_source: ClusterSource;
   confidence: number;
   human_checkpoint_required: boolean;
+  video_timestamp_start?: number;
+  video_timestamp_end?: number;
 }
+
 
 
 export const CATEGORY_LABELS: Record<EventCategory, string> = {
@@ -370,43 +376,50 @@ export const RANGE_PRESETS: RangePreset[] = [
 
 /**
  * Generate a fresh (non-deterministic) analysis run for a line.
- * ~60-120 cycles across a 2h window ending "now", ~15% error rate.
+ * Cycles are packed sequentially inside [0, videoDurationSec] at ~3-6s each
+ * with light gaps. Wall-clock timestamps map the video window to end "now"
+ * so existing time-range filters still work.
  */
-export function generateRun(lineId: string): Seed {
+export function generateRun(lineId: string, videoDurationSec: number): Seed {
   const line = LINES.find((l) => l.id === lineId) ?? LINES[0];
   const runId = Math.floor(Math.random() * 1_000_000);
-  const cycleCount = 60 + Math.floor(Math.random() * 61); // 60..120
-  const errorRate = 0.12 + Math.random() * 0.06; // ~15%
-  const baseDuration = 4 + Math.random() * 2; // 4..6s
-  const jitter = 1.2 + Math.random() * 1.2;
+  const errorRate = 0.12 + Math.random() * 0.06;
 
-  const end = Date.now();
-  const start = end - 2 * 60 * 60 * 1000;
-  const span = end - start;
+  const wallEnd = Date.now();
+  const wallStart = wallEnd - Math.round(videoDurationSec * 1000);
 
   const cycles: Cycle[] = [];
   const events: ProcessEvent[] = [];
 
-  for (let i = 0; i < cycleCount; i++) {
-    const startTs = start + Math.floor(Math.random() * span);
-    let duration = baseDuration + Math.random() * jitter;
-    if (Math.random() < 0.07) duration = baseDuration + jitter + Math.random() * 4;
+  let cursor = 0;
+  let i = 0;
+  while (cursor < videoDurationSec - 1) {
+    const duration = 3 + Math.random() * 3; // 3..6s
+    let vStart = cursor;
+    let vEnd = Math.min(videoDurationSec, cursor + duration);
+    // small gap between cycles
+    cursor = vEnd + Math.random() * 0.6;
+
+    const startTs = wallStart + Math.round(vStart * 1000);
+    const endTs = wallStart + Math.round(vEnd * 1000);
+    const actualDur = Math.round((vEnd - vStart) * 100) / 100;
 
     const isError = Math.random() < errorRate;
-    const endTs = startTs + duration * 1000;
     const cycle: Cycle = {
-      id: `run-${runId}-c-${i + 1}`,
+      id: `run-${runId}-c-${++i}`,
       line_id: line.id,
       start_ts: startTs,
       end_ts: endTs,
-      duration_sec: Math.round(duration * 100) / 100,
+      duration_sec: actualDur,
       status: isError ? "error" : "ok",
+      video_timestamp_start: Math.round(vStart * 100) / 100,
+      video_timestamp_end: Math.round(vEnd * 100) / 100,
     };
     cycles.push(cycle);
 
     if (isError) {
       let category: EventCategory;
-      if (duration > baseDuration + jitter) {
+      if (actualDur > 5.5) {
         category = "Taktzeitueberschreitung";
       } else {
         category = CATEGORIES[Math.floor(Math.random() * CATEGORIES.length)];
@@ -420,21 +433,28 @@ export function generateRun(lineId: string): Seed {
       const confidence = Math.round(rawConf * 100) / 100;
       const human_checkpoint_required =
         confidence < 0.6 && (severity === "medium" || severity === "high");
+
+      // Event spans a sub-window inside the cycle.
+      const evStartRel = vStart + (vEnd - vStart) * 0.25;
+      const evEndRel = Math.min(vEnd, evStartRel + 0.8 + Math.random() * 1.5);
       events.push({
         id: `run-${runId}-e-${events.length + 1}`,
         line_id: line.id,
         cycle_id: cycle.id,
         category,
         severity,
-        timestamp: startTs + Math.floor(duration * 500),
+        timestamp: wallStart + Math.round(evStartRel * 1000),
         description,
         video_clip_url: null,
         cluster_source: CATEGORY_TO_CLUSTER[category],
         confidence,
         human_checkpoint_required,
+        video_timestamp_start: Math.round(evStartRel * 100) / 100,
+        video_timestamp_end: Math.round(evEndRel * 100) / 100,
       });
     }
   }
+
 
   cycles.sort((a, b) => a.start_ts - b.start_ts);
   events.sort((a, b) => a.timestamp - b.timestamp);

@@ -26,7 +26,12 @@ function formatTime(ts: number) {
   });
 }
 
-export function EventFeed({ events }: { events: ProcessEvent[] }) {
+interface Props {
+  events: ProcessEvent[];
+  onEventClick?: (e: ProcessEvent) => void;
+}
+
+export function EventFeed({ events, onEventClick }: Props) {
   const [active, setActive] = useState<Set<EventCategory>>(new Set());
   const [selected, setSelected] = useState<ProcessEvent | null>(null);
 
@@ -43,6 +48,11 @@ export function EventFeed({ events }: { events: ProcessEvent[] }) {
       else next.add(c);
       return next;
     });
+  };
+
+  const handleRowClick = (e: ProcessEvent) => {
+    onEventClick?.(e);
+    setSelected(e);
   };
 
   return (
@@ -98,7 +108,7 @@ export function EventFeed({ events }: { events: ProcessEvent[] }) {
             {filtered.map((e) => (
               <li key={e.id}>
                 <button
-                  onClick={() => setSelected(e)}
+                  onClick={() => handleRowClick(e)}
                   className="w-full text-left px-5 py-3 hover:bg-muted/50 transition-colors"
                 >
                   <div className="flex items-start gap-3">
@@ -123,7 +133,6 @@ export function EventFeed({ events }: { events: ProcessEvent[] }) {
                           </span>
                         )}
                       </div>
-
                       <p className="text-sm text-foreground truncate">{e.description}</p>
                     </div>
                   </div>

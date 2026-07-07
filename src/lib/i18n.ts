@@ -80,7 +80,7 @@ const DE: Dict = {
   "linien.name": "Name der Linie",
   "linien.location": "Standort",
   "linien.optionalLabel": "Szenario-Label",
-  "linien.optionalLabelHint": "z. B. „vor Layout-Änderung", „nach Griffhöhen-Anpassung"",
+  "linien.optionalLabelHint": "z. B. \"vor Layout-Änderung\", \"nach Griffhöhen-Anpassung\"",
 
   "video.noClip": "Kein Video verknüpft",
   "video.noClipHint": "Für dieses Szenario wurde noch kein Video hochgeladen.",

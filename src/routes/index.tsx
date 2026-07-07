@@ -42,7 +42,8 @@ function Dashboard() {
   const [lineId, setLineId] = useState<string>(LINES[0].id);
   const [presetId, setPresetId] = useState<RangePresetId>("2h");
 
-  const seed = getSeed(lineId);
+  const runOverride = useRun(lineId);
+  const seed = runOverride ?? getSeed(lineId);
   const range = useMemo(
     () => (RANGE_PRESETS.find((p) => p.id === presetId) ?? RANGE_PRESETS[0]).compute(),
     [presetId],
@@ -61,7 +62,23 @@ function Dashboard() {
   const activeLine = seed.line;
 
   const rangeLabel = RANGE_PRESETS.find((p) => p.id === presetId)?.label ?? "";
-  const now = new Date();
+
+  // Client-only timestamp avoids SSR/CSR TZ hydration mismatch.
+  const [nowLabel, setNowLabel] = useState<string>("");
+  useEffect(() => {
+    const fmt = () =>
+      new Date().toLocaleString("de-DE", {
+        day: "2-digit",
+        month: "2-digit",
+        year: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+      });
+    setNowLabel(fmt());
+    const t = setInterval(() => setNowLabel(fmt()), 30_000);
+    return () => clearInterval(t);
+  }, []);
+
 
   return (
     <div className="flex min-h-screen w-full bg-background">

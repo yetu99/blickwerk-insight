@@ -366,3 +366,77 @@ export const RANGE_PRESETS: RangePreset[] = [
     },
   },
 ];
+
+/**
+ * Generate a fresh (non-deterministic) analysis run for a line.
+ * ~60-120 cycles across a 2h window ending "now", ~15% error rate.
+ */
+export function generateRun(lineId: string): Seed {
+  const line = LINES.find((l) => l.id === lineId) ?? LINES[0];
+  const runId = Math.floor(Math.random() * 1_000_000);
+  const cycleCount = 60 + Math.floor(Math.random() * 61); // 60..120
+  const errorRate = 0.12 + Math.random() * 0.06; // ~15%
+  const baseDuration = 4 + Math.random() * 2; // 4..6s
+  const jitter = 1.2 + Math.random() * 1.2;
+
+  const end = Date.now();
+  const start = end - 2 * 60 * 60 * 1000;
+  const span = end - start;
+
+  const cycles: Cycle[] = [];
+  const events: ProcessEvent[] = [];
+
+  for (let i = 0; i < cycleCount; i++) {
+    const startTs = start + Math.floor(Math.random() * span);
+    let duration = baseDuration + Math.random() * jitter;
+    if (Math.random() < 0.07) duration = baseDuration + jitter + Math.random() * 4;
+
+    const isError = Math.random() < errorRate;
+    const endTs = startTs + duration * 1000;
+    const cycle: Cycle = {
+      id: `run-${runId}-c-${i + 1}`,
+      line_id: line.id,
+      start_ts: startTs,
+      end_ts: endTs,
+      duration_sec: Math.round(duration * 100) / 100,
+      status: isError ? "error" : "ok",
+    };
+    cycles.push(cycle);
+
+    if (isError) {
+      let category: EventCategory;
+      if (duration > baseDuration + jitter) {
+        category = "Taktzeitueberschreitung";
+      } else {
+        category = CATEGORIES[Math.floor(Math.random() * CATEGORIES.length)];
+      }
+      const sevs = SEVERITY_BY_CATEGORY[category];
+      const severity = sevs[Math.floor(Math.random() * sevs.length)];
+      const descs = CATEGORY_DESCRIPTIONS[category];
+      const description = descs[Math.floor(Math.random() * descs.length)];
+      const rawConf =
+        Math.random() < 0.15 ? 0.4 + Math.random() * 0.2 : 0.7 + Math.random() * 0.25;
+      const confidence = Math.round(rawConf * 100) / 100;
+      const human_checkpoint_required =
+        confidence < 0.6 && (severity === "medium" || severity === "high");
+      events.push({
+        id: `run-${runId}-e-${events.length + 1}`,
+        line_id: line.id,
+        cycle_id: cycle.id,
+        category,
+        severity,
+        timestamp: startTs + Math.floor(duration * 500),
+        description,
+        video_clip_url: null,
+        cluster_source: CATEGORY_TO_CLUSTER[category],
+        confidence,
+        human_checkpoint_required,
+      });
+    }
+  }
+
+  cycles.sort((a, b) => a.start_ts - b.start_ts);
+  events.sort((a, b) => a.timestamp - b.timestamp);
+  return { line, cycles, events };
+}
+

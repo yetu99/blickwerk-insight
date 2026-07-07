@@ -1,7 +1,9 @@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Film } from "lucide-react";
 import type { ProcessEvent } from "@/lib/mock-data";
-import { CATEGORY_LABELS } from "@/lib/mock-data";
+import { CATEGORY_LABELS, CLUSTER_LABELS } from "@/lib/mock-data";
+import { useVideo } from "@/lib/runs-store";
+import { EventVideoPlayer } from "./event-video-player";
 
 interface Props {
   event: ProcessEvent | null;
@@ -9,6 +11,12 @@ interface Props {
 }
 
 export function EventDetailDialog({ event, onClose }: Props) {
+  const video = useVideo(event?.line_id ?? "");
+  const canPlay =
+    !!video &&
+    event?.video_timestamp_start !== undefined &&
+    event?.video_timestamp_end !== undefined;
+
   return (
     <Dialog open={!!event} onOpenChange={(o) => !o && onClose()}>
       <DialogContent className="max-w-2xl">
@@ -23,21 +31,29 @@ export function EventDetailDialog({ event, onClose }: Props) {
               </p>
             </DialogHeader>
 
-            {/* Video placeholder — fixed 16:9, dashed border, functionally empty */}
-            <div
-              className="w-full rounded-lg border-2 border-dashed border-border bg-muted/40 flex items-center justify-center"
-              style={{ aspectRatio: "16 / 9" }}
-            >
-              <div className="text-center px-6">
-                <Film className="h-8 w-8 text-muted-foreground/60 mx-auto mb-2" />
-                <p className="text-sm font-medium text-muted-foreground">
-                  Video-Clip wird manuell verknüpft
-                </p>
-                <p className="text-[11px] text-muted-foreground/70 mt-1">
-                  Kein Clip hinterlegt · Feld reserviert für spätere Verknüpfung
-                </p>
+            {canPlay ? (
+              <EventVideoPlayer
+                src={video!.url}
+                eventStart={event.video_timestamp_start!}
+                eventEnd={event.video_timestamp_end!}
+                videoDuration={video!.durationSec}
+              />
+            ) : (
+              <div
+                className="w-full rounded-lg border-2 border-dashed border-border bg-muted/40 flex items-center justify-center"
+                style={{ aspectRatio: "16 / 9" }}
+              >
+                <div className="text-center px-6">
+                  <Film className="h-8 w-8 text-muted-foreground/60 mx-auto mb-2" />
+                  <p className="text-sm font-medium text-muted-foreground">
+                    Video-Clip wird manuell verknüpft
+                  </p>
+                  <p className="text-[11px] text-muted-foreground/70 mt-1">
+                    Kein Clip hinterlegt · Feld reserviert für spätere Verknüpfung
+                  </p>
+                </div>
               </div>
-            </div>
+            )}
 
             <div className="grid grid-cols-2 gap-4 pt-2">
               <div>
@@ -45,6 +61,27 @@ export function EventDetailDialog({ event, onClose }: Props) {
                   Schweregrad
                 </div>
                 <div className="text-sm font-medium mt-0.5 capitalize">{event.severity}</div>
+              </div>
+              <div>
+                <div className="text-[11px] uppercase tracking-wider text-muted-foreground">
+                  Konfidenz
+                </div>
+                <div className="text-sm font-medium mt-0.5 tabular-nums">
+                  {(event.confidence * 100).toFixed(0)}%
+                  {event.human_checkpoint_required && (
+                    <span className="ml-2 text-[10px] font-medium text-warning-foreground bg-warning/15 border border-warning/50 rounded px-1.5 py-0.5">
+                      Rückfrage nötig
+                    </span>
+                  )}
+                </div>
+              </div>
+              <div>
+                <div className="text-[11px] uppercase tracking-wider text-muted-foreground">
+                  Cluster-Quelle
+                </div>
+                <div className="text-sm font-medium mt-0.5">
+                  {CLUSTER_LABELS[event.cluster_source]}
+                </div>
               </div>
               <div>
                 <div className="text-[11px] uppercase tracking-wider text-muted-foreground">

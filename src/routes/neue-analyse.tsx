@@ -50,10 +50,23 @@ function formatSize(bytes: number) {
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 }
 
+function formatDuration(sec: number) {
+  const m = Math.floor(sec / 60);
+  const s = Math.floor(sec % 60);
+  return `${m}:${s.toString().padStart(2, "0")} min`;
+}
+
+interface PreparedFile {
+  file: File;
+  url: string;
+  durationSec: number;
+}
+
 function NeueAnalyse() {
   const navigate = useNavigate();
   const inputRef = useRef<HTMLInputElement>(null);
-  const [file, setFile] = useState<File | null>(null);
+  const [prepared, setPrepared] = useState<PreparedFile | null>(null);
+  const [probing, setProbing] = useState(false);
   const [lineId, setLineId] = useState<string>(LINES[0].id);
   const [dragOver, setDragOver] = useState(false);
   const [running, setRunning] = useState(false);
@@ -64,31 +77,72 @@ function NeueAnalyse() {
   useEffect(() => {
     if (!running) return;
     if (stage >= STAGES.length) {
-      // finalize
-      const seed = generateRun(lineId);
+      if (!prepared) return;
+      const seed = generateRun(lineId, prepared.durationSec);
+      setVideo(lineId, {
+        url: prepared.url,
+        durationSec: prepared.durationSec,
+        filename: prepared.file.name,
+        sizeBytes: prepared.file.size,
+      });
       setRun(lineId, seed);
       const t = setTimeout(() => navigate({ to: "/" }), 600);
       return () => clearTimeout(t);
     }
     const t = setTimeout(() => setStage((s) => s + 1), 1700);
     return () => clearTimeout(t);
-  }, [running, stage, lineId, navigate]);
+  }, [running, stage, lineId, navigate, prepared]);
 
   const onSelectFile = (f: File | null) => {
     if (!f) return;
     if (!/\.(mp4|mov|m4v|quicktime)$/i.test(f.name) && !f.type.startsWith("video/")) {
       return;
     }
-    setFile(f);
+    setProbing(true);
+    // Read real duration from browser metadata before enabling start.
+    const url = URL.createObjectURL(f);
+    const video = document.createElement("video");
+    video.preload = "metadata";
+    video.src = url;
+    const cleanup = () => {
+      video.onloadedmetadata = null;
+      video.onerror = null;
+    };
+    video.onloadedmetadata = () => {
+      const duration = Number.isFinite(video.duration) && video.duration > 0
+        ? video.duration
+        : 60; // fallback so demo still works
+      setPrepared({ file: f, url, durationSec: duration });
+      setProbing(false);
+      cleanup();
+    };
+    video.onerror = () => {
+      // Fall back to a plausible default; still usable for demo.
+      setPrepared({ file: f, url, durationSec: 60 });
+      setProbing(false);
+      cleanup();
+    };
+  };
+
+  const clearFile = () => {
+    if (prepared) {
+      try {
+        URL.revokeObjectURL(prepared.url);
+      } catch {
+        /* noop */
+      }
+    }
+    setPrepared(null);
   };
 
   const start = () => {
-    if (!file) return;
+    if (!prepared) return;
     setStage(0);
     setRunning(true);
   };
 
   const progress = running ? Math.min(100, (stage / STAGES.length) * 100) : 0;
+
 
   return (
     <div className="flex min-h-screen w-full bg-background">

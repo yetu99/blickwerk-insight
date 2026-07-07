@@ -19,7 +19,8 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { LINES, generateRun } from "@/lib/mock-data";
-import { setRun } from "@/lib/runs-store";
+import { setRun, setVideo } from "@/lib/runs-store";
+
 
 export const Route = createFileRoute("/neue-analyse")({
   head: () => ({

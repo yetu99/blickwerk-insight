@@ -22,7 +22,7 @@ import {
 const nav = [
   { label: "Neue Analyse", icon: Upload, to: "/neue-analyse" as const },
   { label: "Übersicht", icon: LayoutDashboard, to: "/" as const },
-  { label: "Linien", icon: Factory, to: "/" as const, disabled: true },
+  { label: "Linien", icon: Factory, to: "/linien" as const },
   { label: "Ereignisse", icon: Activity, to: "/" as const, disabled: true },
   { label: "Einstellungen", icon: Settings, to: "/" as const, disabled: true },
 ];
@@ -33,31 +33,57 @@ export function BlickWerkSidebar({ activeLine }: { activeLine: Line }) {
 
   const width = collapsed ? "w-16" : "w-64";
 
+  const CollapseToggle = (
+    <button
+      onClick={() => setCollapsed((v) => !v)}
+      className={`flex items-center justify-center rounded-md text-sidebar-foreground/60 hover:text-sidebar-foreground hover:bg-sidebar-accent transition-colors ${
+        collapsed ? "h-8 w-8" : "h-7 w-7"
+      }`}
+      aria-label={collapsed ? "Seitenleiste ausklappen" : "Seitenleiste einklappen"}
+    >
+      {collapsed ? (
+        <ChevronsRight className="h-4 w-4" />
+      ) : (
+        <ChevronsLeft className="h-3.5 w-3.5" />
+      )}
+    </button>
+  );
+
   return (
     <TooltipProvider delayDuration={200}>
       <aside
         className={`hidden md:flex shrink-0 flex-col bg-sidebar text-sidebar-foreground transition-[width] duration-200 ease-out ${width}`}
       >
+        {/* Header row: logo + title on left, collapse toggle on right.
+            When collapsed: only the toggle, centered. */}
         <div
           className={`border-b border-sidebar-border ${
-            collapsed ? "px-2 py-4" : "px-5 py-6"
+            collapsed ? "px-2 py-4 flex justify-center" : "px-4 py-4"
           }`}
         >
-          <div className={`flex items-center ${collapsed ? "justify-center" : "gap-3"}`}>
-            <img
-              src={logoUrl}
-              alt="symplify"
-              className="h-9 w-9 rounded-md bg-white p-1 shrink-0"
-            />
-            {!collapsed && (
-              <div className="min-w-0">
-                <div className="font-semibold tracking-tight text-base">symplify</div>
+          {collapsed ? (
+            <Tooltip>
+              <TooltipTrigger asChild>{CollapseToggle}</TooltipTrigger>
+              <TooltipContent side="right">Seitenleiste ausklappen</TooltipContent>
+            </Tooltip>
+          ) : (
+            <div className="flex items-center gap-3">
+              <img
+                src={logoUrl}
+                alt="symplify"
+                className="h-9 w-9 rounded-md bg-white p-1 shrink-0"
+              />
+              <div className="min-w-0 flex-1">
+                <div className="font-semibold tracking-tight text-base leading-tight">
+                  symplify
+                </div>
                 <div className="text-[11px] uppercase tracking-wider text-sidebar-foreground/60">
                   Prozess-Intelligenz
                 </div>
               </div>
-            )}
-          </div>
+              {CollapseToggle}
+            </div>
+          )}
         </div>
 
         <nav className={`flex-1 py-4 space-y-1 ${collapsed ? "px-2" : "px-3"}`}>
@@ -137,23 +163,6 @@ export function BlickWerkSidebar({ activeLine }: { activeLine: Line }) {
               Hilfe & Support
             </button>
           )}
-
-          <button
-            onClick={() => setCollapsed((v) => !v)}
-            className={`mt-2 w-full flex items-center rounded-md text-xs text-sidebar-foreground/60 hover:text-sidebar-foreground hover:bg-sidebar-accent transition-colors ${
-              collapsed ? "justify-center px-2 py-2" : "gap-2 px-3 py-2"
-            }`}
-            aria-label={collapsed ? "Seitenleiste ausklappen" : "Seitenleiste einklappen"}
-          >
-            {collapsed ? (
-              <ChevronsRight className="h-4 w-4" />
-            ) : (
-              <>
-                <ChevronsLeft className="h-3.5 w-3.5" />
-                Einklappen
-              </>
-            )}
-          </button>
         </div>
       </aside>
     </TooltipProvider>

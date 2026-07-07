@@ -42,12 +42,17 @@ function Dashboard() {
   const [lineId, setLineId] = useState<string>(LINES[0].id);
   const [presetId, setPresetId] = useState<RangePresetId>("2h");
 
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
+
   const runOverride = useRun(lineId);
   const seed = runOverride ?? getSeed(lineId);
   const range = useMemo(
     () => (RANGE_PRESETS.find((p) => p.id === presetId) ?? RANGE_PRESETS[0]).compute(),
-    [presetId],
+    // Recompute after mount so SSR & CSR agree on empty → real data.
+    [presetId, mounted],
   );
+
 
   const cycles = useMemo(
     () => filterByRange(seed.cycles, range.from, range.to),

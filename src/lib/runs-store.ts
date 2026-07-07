@@ -118,10 +118,37 @@ export function getRun(lineId: string): Seed | undefined {
 }
 
 // ---------- Reactive hooks ----------
+// Snapshot functions for useSyncExternalStore MUST return referentially stable
+// values when underlying state hasn't changed; a fresh object/array every read
+// triggers React 19 minified error #185 in production. Cache per key.
+
+const EMPTY_SZENARIEN: Szenario[] = [];
+
+const szenarienForLineCache: Record<string, { key: string; value: Szenario[] }> = {};
+function snapshotSzenarienForLine(lineId: string): Szenario[] {
+  const ids = szenarienByLine[lineId] ?? [];
+  const key = ids.map((id) => `${id}@${szenarien[id]?.createdAt ?? 0}`).join("|");
+  const cached = szenarienForLineCache[lineId];
+  if (cached && cached.key === key) return cached.value;
+  const value = getSzenarienForLine(lineId);
+  szenarienForLineCache[lineId] = { key, value };
+  return value;
+}
+
+const runCache: Record<string, { szId: string | undefined; value: Seed | undefined }> = {};
+function snapshotRun(lineId: string): Seed | undefined {
+  const sz = getActiveSzenario(lineId);
+  const cached = runCache[lineId];
+  if (cached && cached.szId === sz?.id) return cached.value;
+  const value = getRun(lineId);
+  runCache[lineId] = { szId: sz?.id, value };
+  return value;
+}
+
 export function useRun(lineId: string): Seed | undefined {
   return useSyncExternalStore(
     subscribe,
-    () => getRun(lineId),
+    () => snapshotRun(lineId),
     () => undefined,
   );
 }
@@ -137,8 +164,8 @@ export function useActiveSzenario(lineId: string): Szenario | undefined {
 export function useSzenarienForLine(lineId: string): Szenario[] {
   return useSyncExternalStore(
     subscribe,
-    () => getSzenarienForLine(lineId),
-    () => [],
+    () => snapshotSzenarienForLine(lineId),
+    () => EMPTY_SZENARIEN,
   );
 }
 

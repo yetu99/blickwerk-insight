@@ -77,6 +77,18 @@ export const CATEGORY_LABELS: Record<EventCategory, string> = {
   Prozessunterbrechung: "Prozessunterbrechung",
 };
 
+export type ProcessStep = "Pick" | "Place" | "Kontrolle" | "Korrektur";
+
+export const CATEGORY_TO_STEP: Record<EventCategory, ProcessStep> = {
+  Fehlgriff: "Pick",
+  Zoegern: "Pick",
+  Taktzeitueberschreitung: "Place",
+  Farbverwechslung: "Kontrolle",
+  Prozessunterbrechung: "Korrektur",
+};
+
+export const PROCESS_STEPS: ProcessStep[] = ["Pick", "Place", "Kontrolle", "Korrektur"];
+
 const CATEGORY_DESCRIPTIONS: Record<EventCategory, string[]> = {
   Fehlgriff: [
     "Bauteil fiel beim Aufnehmen aus dem Greifer.",

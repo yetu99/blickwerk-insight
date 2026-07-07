@@ -247,6 +247,12 @@ function generateLine(line: Line, cfg: LineConfig): Seed {
       const severity = sevs[Math.floor(rand() * sevs.length)];
       const descs = CATEGORY_DESCRIPTIONS[category];
       const description = descs[Math.floor(rand() * descs.length)];
+      const confidence = rand() < 0.15
+        ? 0.4 + rand() * 0.2 // occasional low-confidence
+        : 0.7 + rand() * 0.25;
+      const confRounded = Math.round(confidence * 100) / 100;
+      const human_checkpoint_required =
+        confRounded < 0.6 && (severity === "medium" || severity === "high");
       events.push({
         id: `${line.id}-e-${events.length + 1}`,
         line_id: line.id,
@@ -256,6 +262,9 @@ function generateLine(line: Line, cfg: LineConfig): Seed {
         timestamp: startTs + Math.floor(duration * 500),
         description,
         video_clip_url: null,
+        cluster_source: CATEGORY_TO_CLUSTER[category],
+        confidence: confRounded,
+        human_checkpoint_required,
       });
     }
   }
@@ -263,6 +272,7 @@ function generateLine(line: Line, cfg: LineConfig): Seed {
   cycles.sort((a, b) => a.start_ts - b.start_ts);
   events.sort((a, b) => a.timestamp - b.timestamp);
   return { line, cycles, events };
+
 }
 
 export const SEEDS: Record<string, Seed> = Object.fromEntries(

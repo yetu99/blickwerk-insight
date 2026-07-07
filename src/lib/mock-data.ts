@@ -23,6 +23,31 @@ export interface Cycle {
   status: "ok" | "error";
 }
 
+export type ClusterSource =
+  | "waiting"
+  | "timwoods_motion"
+  | "timwoods_overprocessing"
+  | "timwoods_defects"
+  | "timwoods_skills"
+  | "tracker";
+
+export const CATEGORY_TO_CLUSTER: Record<EventCategory, ClusterSource> = {
+  Fehlgriff: "timwoods_motion",
+  Farbverwechslung: "timwoods_defects",
+  Taktzeitueberschreitung: "tracker",
+  Zoegern: "timwoods_skills",
+  Prozessunterbrechung: "waiting",
+};
+
+export const CLUSTER_LABELS: Record<ClusterSource, string> = {
+  waiting: "Warten",
+  timwoods_motion: "TIMWOODS · Bewegung",
+  timwoods_overprocessing: "TIMWOODS · Überbearbeitung",
+  timwoods_defects: "TIMWOODS · Fehler",
+  timwoods_skills: "TIMWOODS · Fähigkeiten",
+  tracker: "Tracker",
+};
+
 export interface ProcessEvent {
   id: string;
   line_id: string;
@@ -32,7 +57,11 @@ export interface ProcessEvent {
   timestamp: number;
   description: string;
   video_clip_url: string | null;
+  cluster_source: ClusterSource;
+  confidence: number;
+  human_checkpoint_required: boolean;
 }
+
 
 export const CATEGORY_LABELS: Record<EventCategory, string> = {
   Fehlgriff: "Fehlgriff",

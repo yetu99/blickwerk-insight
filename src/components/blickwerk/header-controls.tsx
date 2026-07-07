@@ -7,7 +7,8 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
-import { LINES, RANGE_PRESETS, type RangePresetId } from "@/lib/mock-data";
+import { RANGE_PRESETS, type RangePresetId } from "@/lib/mock-data";
+import { useAllLines } from "@/lib/runs-store";
 
 interface Props {
   lineId: string;
@@ -17,8 +18,11 @@ interface Props {
 }
 
 export function HeaderControls({ lineId, onLineChange, presetId, onPresetChange }: Props) {
-  const activeLine = LINES.find((l) => l.id === lineId) ?? LINES[0];
+  const allLines = useAllLines();
+  const activeLine =
+    allLines.find((l) => l.line.id === lineId)?.line ?? allLines[0].line;
   const activePreset = RANGE_PRESETS.find((p) => p.id === presetId) ?? RANGE_PRESETS[0];
+
 
   return (
     <div className="flex items-center gap-2">

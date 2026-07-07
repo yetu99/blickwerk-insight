@@ -55,13 +55,14 @@ function Dashboard() {
 
 
   const cycles = useMemo(
-    () => filterByRange(seed.cycles, range.from, range.to),
-    [seed.cycles, range.from, range.to],
+    () => (mounted ? filterByRange(seed.cycles, range.from, range.to) : []),
+    [seed.cycles, range.from, range.to, mounted],
   );
   const events = useMemo(
-    () => filterByRange(seed.events, range.from, range.to),
-    [seed.events, range.from, range.to],
+    () => (mounted ? filterByRange(seed.events, range.from, range.to) : []),
+    [seed.events, range.from, range.to, mounted],
   );
+
 
   const kpis = computeKpis(cycles, events);
   const activeLine = seed.line;

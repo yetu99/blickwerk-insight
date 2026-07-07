@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { Activity, Clock, AlertTriangle, PowerOff } from "lucide-react";
 import { BlickWerkSidebar } from "@/components/blickwerk/sidebar";
@@ -16,6 +16,8 @@ import {
   filterByRange,
   type RangePresetId,
 } from "@/lib/mock-data";
+import { useRun } from "@/lib/runs-store";
+
 
 export const Route = createFileRoute("/")({
   head: () => ({

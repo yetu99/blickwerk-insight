@@ -277,7 +277,7 @@ function NeueAnalyse() {
               <div className="flex justify-end">
                 <button
                   onClick={start}
-                  disabled={!file}
+                  disabled={!prepared}
                   className="inline-flex items-center gap-2 rounded-md bg-primary px-5 py-2.5 text-sm font-medium text-primary-foreground shadow-sm hover:bg-primary/90 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
                 >
                   <UploadIcon className="h-4 w-4" />

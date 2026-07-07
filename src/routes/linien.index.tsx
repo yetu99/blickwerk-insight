@@ -5,7 +5,7 @@ import { BlickWerkSidebar } from "@/components/blickwerk/sidebar";
 import { LINES, computeKpis } from "@/lib/mock-data";
 import { useAllLines } from "@/lib/runs-store";
 
-export const Route = createFileRoute("/linien")({
+export const Route = createFileRoute("/linien/")({
   head: () => ({
     meta: [
       { title: "Linien – symplify" },

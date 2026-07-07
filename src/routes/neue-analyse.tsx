@@ -6,11 +6,19 @@ import {
   Check,
   Loader2,
   X,
+  ChevronDown,
 } from "lucide-react";
 import { BlickWerkSidebar } from "@/components/blickwerk/sidebar";
 import { Progress } from "@/components/ui/progress";
 import { LINES, generateRun } from "@/lib/mock-data";
-import { setDraft } from "@/lib/runs-store";
+import { setDraft, useAllLines } from "@/lib/runs-store";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+  DropdownMenuSeparator,
+} from "@/components/ui/dropdown-menu";
 
 export const Route = createFileRoute("/neue-analyse")({
   head: () => ({
@@ -52,19 +60,26 @@ interface PreparedFile {
   durationSec: number;
 }
 
+const NEW_LINE_SENTINEL = "__new__";
+
 function NeueAnalyse() {
   const navigate = useNavigate();
   const inputRef = useRef<HTMLInputElement>(null);
   const [prepared, setPrepared] = useState<PreparedFile | null>(null);
   const [probing, setProbing] = useState(false);
-  const [processName, setProcessName] = useState("");
-  const [location, setLocation] = useState("");
+  const allLines = useAllLines();
+
+  const [targetLineId, setTargetLineId] = useState<string>(
+    allLines[0]?.line.id ?? NEW_LINE_SENTINEL,
+  );
+  const [newLineName, setNewLineName] = useState("");
+  const [newLineLocation, setNewLineLocation] = useState("");
+  const [label, setLabel] = useState("");
+
   const [dragOver, setDragOver] = useState(false);
   const [running, setRunning] = useState(false);
   const [stage, setStage] = useState(0);
 
-  // Sidebar still expects a "current line" — during a fresh analysis we
-  // show the first seed line as a neutral fallback.
   const sidebarLine = LINES[0];
 
   useEffect(() => {
@@ -73,8 +88,15 @@ function NeueAnalyse() {
       if (!prepared) return;
       const seed = generateRun("draft", prepared.durationSec);
       setDraft({
-        processName: processName.trim() || "Neuer Prozess",
-        location: location.trim(),
+        targetLineId: targetLineId === NEW_LINE_SENTINEL ? null : targetLineId,
+        newLine:
+          targetLineId === NEW_LINE_SENTINEL
+            ? {
+                name: newLineName.trim() || "Neue Linie",
+                location: newLineLocation.trim(),
+              }
+            : null,
+        label: label.trim(),
         cycles: seed.cycles,
         events: seed.events,
         video: {
@@ -90,7 +112,16 @@ function NeueAnalyse() {
     }
     const t = setTimeout(() => setStage((s) => s + 1), 1700);
     return () => clearTimeout(t);
-  }, [running, stage, navigate, prepared, processName, location]);
+  }, [
+    running,
+    stage,
+    navigate,
+    prepared,
+    targetLineId,
+    newLineName,
+    newLineLocation,
+    label,
+  ]);
 
   const onSelectFile = (f: File | null) => {
     if (!f) return;
@@ -127,14 +158,22 @@ function NeueAnalyse() {
     setPrepared(null);
   };
 
+  const isNewLine = targetLineId === NEW_LINE_SENTINEL;
+  const canStart =
+    !!prepared &&
+    (!isNewLine || newLineName.trim().length > 0);
+
   const start = () => {
-    if (!prepared || !processName.trim()) return;
+    if (!canStart) return;
     setStage(0);
     setRunning(true);
   };
 
   const progress = running ? Math.min(100, (stage / STAGES.length) * 100) : 0;
-  const canStart = !!prepared && processName.trim().length > 0;
+
+  const selectedLineLabel = isNewLine
+    ? "+ Neue Linie anlegen"
+    : allLines.find((l) => l.line.id === targetLineId)?.line.name ?? "Linie wählen";
 
   return (
     <div className="flex min-h-screen w-full bg-background">
@@ -225,46 +264,101 @@ function NeueAnalyse() {
 
               <section className="rounded-xl border border-border bg-card p-6 shadow-[var(--shadow-card)]">
                 <h2 className="text-sm font-semibold text-foreground mb-1">
-                  2. Prozess benennen
+                  2. Linie und Szenario
                 </h2>
                 <p className="text-xs text-muted-foreground mb-4">
-                  Diese Bezeichnung erscheint nach der Analyse in der Übersicht
-                  und kann anschließend als neue Linie gespeichert werden.
+                  Das Video wird als neues Szenario zu einer bestehenden Linie
+                  hinzugefügt – oder du legst eine neue Linie an.
                 </p>
 
                 <div className="space-y-4">
                   <div>
-                    <label
-                      htmlFor="process-name"
-                      className="block text-xs font-medium text-foreground mb-1.5"
-                    >
-                      Bezeichnung für diesen Prozess
-                      <span className="text-destructive ml-1">*</span>
+                    <label className="block text-xs font-medium text-foreground mb-1.5">
+                      Linie <span className="text-destructive">*</span>
                     </label>
-                    <input
-                      id="process-name"
-                      type="text"
-                      value={processName}
-                      onChange={(e) => setProcessName(e.target.value)}
-                      placeholder="z. B. Montage Station 4"
-                      className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary transition-colors"
-                    />
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <button className="w-full inline-flex items-center justify-between rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground hover:border-primary/50 transition-colors">
+                          <span className="truncate">{selectedLineLabel}</span>
+                          <ChevronDown className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+                        </button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent className="w-[--radix-dropdown-menu-trigger-width]">
+                        {allLines.map(({ line: l, szenarienCount }) => (
+                          <DropdownMenuItem
+                            key={l.id}
+                            onSelect={() => setTargetLineId(l.id)}
+                          >
+                            <div className="flex-1 min-w-0">
+                              <div className="text-sm font-medium truncate">
+                                {l.name}
+                              </div>
+                              <div className="text-[11px] text-muted-foreground">
+                                {l.location} · {szenarienCount} Szenarien
+                              </div>
+                            </div>
+                            {targetLineId === l.id && (
+                              <Check className="h-3.5 w-3.5 text-primary" />
+                            )}
+                          </DropdownMenuItem>
+                        ))}
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem
+                          onSelect={() => setTargetLineId(NEW_LINE_SENTINEL)}
+                        >
+                          <span className="text-sm text-primary">
+                            + Neue Linie anlegen
+                          </span>
+                          {isNewLine && (
+                            <Check className="h-3.5 w-3.5 text-primary ml-auto" />
+                          )}
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
                   </div>
 
+                  {isNewLine && (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 rounded-md border border-dashed border-border p-3 bg-muted/30">
+                      <div>
+                        <label className="block text-[11px] font-medium text-foreground mb-1">
+                          Name der Linie <span className="text-destructive">*</span>
+                        </label>
+                        <input
+                          type="text"
+                          value={newLineName}
+                          onChange={(e) => setNewLineName(e.target.value)}
+                          placeholder="z. B. Montage Station 4"
+                          className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm focus:outline-none focus:border-primary transition-colors"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-[11px] font-medium text-foreground mb-1">
+                          Standort <span className="text-muted-foreground font-normal">(optional)</span>
+                        </label>
+                        <input
+                          type="text"
+                          value={newLineLocation}
+                          onChange={(e) => setNewLineLocation(e.target.value)}
+                          placeholder="z. B. Halle 2 · Linie B"
+                          className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm focus:outline-none focus:border-primary transition-colors"
+                        />
+                      </div>
+                    </div>
+                  )}
+
                   <div>
-                    <label
-                      htmlFor="process-location"
-                      className="block text-xs font-medium text-foreground mb-1.5"
-                    >
-                      Standort <span className="text-muted-foreground font-normal">(optional)</span>
+                    <label className="block text-xs font-medium text-foreground mb-1.5">
+                      Szenario-Label{" "}
+                      <span className="text-muted-foreground font-normal">
+                        (optional)
+                      </span>
                     </label>
                     <input
-                      id="process-location"
                       type="text"
-                      value={location}
-                      onChange={(e) => setLocation(e.target.value)}
-                      placeholder="z. B. Halle 2 · Linie B"
-                      className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary transition-colors"
+                      value={label}
+                      onChange={(e) => setLabel(e.target.value)}
+                      placeholder='z. B. "vor Layout-Änderung", "nach Griffhöhen-Anpassung"'
+                      className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm focus:outline-none focus:border-primary transition-colors"
                     />
                   </div>
                 </div>
@@ -291,7 +385,7 @@ function NeueAnalyse() {
                       Analyse läuft
                     </h2>
                     <p className="text-xs text-muted-foreground">
-                      {prepared?.file.name} · {processName.trim() || "Neuer Prozess"}
+                      {prepared?.file.name} · {selectedLineLabel}
                     </p>
                   </div>
                 </div>

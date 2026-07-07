@@ -11,7 +11,12 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as NeueAnalyseRouteImport } from './routes/neue-analyse'
 import { Route as LinienRouteImport } from './routes/linien'
+import { Route as EreignisseRouteImport } from './routes/ereignisse'
+import { Route as EinstellungenRouteImport } from './routes/einstellungen'
+import { Route as AutomatisierungenRouteImport } from './routes/automatisierungen'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as LinienIndexRouteImport } from './routes/linien.index'
+import { Route as LinienLineIdRouteImport } from './routes/linien.$lineId'
 
 const NeueAnalyseRoute = NeueAnalyseRouteImport.update({
   id: '/neue-analyse',
@@ -23,39 +28,105 @@ const LinienRoute = LinienRouteImport.update({
   path: '/linien',
   getParentRoute: () => rootRouteImport,
 } as any)
+const EreignisseRoute = EreignisseRouteImport.update({
+  id: '/ereignisse',
+  path: '/ereignisse',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const EinstellungenRoute = EinstellungenRouteImport.update({
+  id: '/einstellungen',
+  path: '/einstellungen',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AutomatisierungenRoute = AutomatisierungenRouteImport.update({
+  id: '/automatisierungen',
+  path: '/automatisierungen',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const LinienIndexRoute = LinienIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => LinienRoute,
+} as any)
+const LinienLineIdRoute = LinienLineIdRouteImport.update({
+  id: '/$lineId',
+  path: '/$lineId',
+  getParentRoute: () => LinienRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
-  '/linien': typeof LinienRoute
+  '/automatisierungen': typeof AutomatisierungenRoute
+  '/einstellungen': typeof EinstellungenRoute
+  '/ereignisse': typeof EreignisseRoute
+  '/linien': typeof LinienRouteWithChildren
   '/neue-analyse': typeof NeueAnalyseRoute
+  '/linien/$lineId': typeof LinienLineIdRoute
+  '/linien/': typeof LinienIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
-  '/linien': typeof LinienRoute
+  '/automatisierungen': typeof AutomatisierungenRoute
+  '/einstellungen': typeof EinstellungenRoute
+  '/ereignisse': typeof EreignisseRoute
   '/neue-analyse': typeof NeueAnalyseRoute
+  '/linien/$lineId': typeof LinienLineIdRoute
+  '/linien': typeof LinienIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
-  '/linien': typeof LinienRoute
+  '/automatisierungen': typeof AutomatisierungenRoute
+  '/einstellungen': typeof EinstellungenRoute
+  '/ereignisse': typeof EreignisseRoute
+  '/linien': typeof LinienRouteWithChildren
   '/neue-analyse': typeof NeueAnalyseRoute
+  '/linien/$lineId': typeof LinienLineIdRoute
+  '/linien/': typeof LinienIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/linien' | '/neue-analyse'
+  fullPaths:
+    | '/'
+    | '/automatisierungen'
+    | '/einstellungen'
+    | '/ereignisse'
+    | '/linien'
+    | '/neue-analyse'
+    | '/linien/$lineId'
+    | '/linien/'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/linien' | '/neue-analyse'
-  id: '__root__' | '/' | '/linien' | '/neue-analyse'
+  to:
+    | '/'
+    | '/automatisierungen'
+    | '/einstellungen'
+    | '/ereignisse'
+    | '/neue-analyse'
+    | '/linien/$lineId'
+    | '/linien'
+  id:
+    | '__root__'
+    | '/'
+    | '/automatisierungen'
+    | '/einstellungen'
+    | '/ereignisse'
+    | '/linien'
+    | '/neue-analyse'
+    | '/linien/$lineId'
+    | '/linien/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
-  LinienRoute: typeof LinienRoute
+  AutomatisierungenRoute: typeof AutomatisierungenRoute
+  EinstellungenRoute: typeof EinstellungenRoute
+  EreignisseRoute: typeof EreignisseRoute
+  LinienRoute: typeof LinienRouteWithChildren
   NeueAnalyseRoute: typeof NeueAnalyseRoute
 }
 
@@ -75,6 +146,27 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LinienRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/ereignisse': {
+      id: '/ereignisse'
+      path: '/ereignisse'
+      fullPath: '/ereignisse'
+      preLoaderRoute: typeof EreignisseRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/einstellungen': {
+      id: '/einstellungen'
+      path: '/einstellungen'
+      fullPath: '/einstellungen'
+      preLoaderRoute: typeof EinstellungenRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/automatisierungen': {
+      id: '/automatisierungen'
+      path: '/automatisierungen'
+      fullPath: '/automatisierungen'
+      preLoaderRoute: typeof AutomatisierungenRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/': {
       id: '/'
       path: '/'
@@ -82,14 +174,54 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/linien/': {
+      id: '/linien/'
+      path: '/'
+      fullPath: '/linien/'
+      preLoaderRoute: typeof LinienIndexRouteImport
+      parentRoute: typeof LinienRoute
+    }
+    '/linien/$lineId': {
+      id: '/linien/$lineId'
+      path: '/$lineId'
+      fullPath: '/linien/$lineId'
+      preLoaderRoute: typeof LinienLineIdRouteImport
+      parentRoute: typeof LinienRoute
+    }
   }
 }
 
+interface LinienRouteChildren {
+  LinienLineIdRoute: typeof LinienLineIdRoute
+  LinienIndexRoute: typeof LinienIndexRoute
+}
+
+const LinienRouteChildren: LinienRouteChildren = {
+  LinienLineIdRoute: LinienLineIdRoute,
+  LinienIndexRoute: LinienIndexRoute,
+}
+
+const LinienRouteWithChildren =
+  LinienRoute._addFileChildren(LinienRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
-  LinienRoute: LinienRoute,
+  AutomatisierungenRoute: AutomatisierungenRoute,
+  EinstellungenRoute: EinstellungenRoute,
+  EreignisseRoute: EreignisseRoute,
+  LinienRoute: LinienRouteWithChildren,
   NeueAnalyseRoute: NeueAnalyseRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}

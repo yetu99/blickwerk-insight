@@ -21,7 +21,10 @@ export interface Cycle {
   end_ts: number;
   duration_sec: number;
   status: "ok" | "error";
+  video_timestamp_start?: number;
+  video_timestamp_end?: number;
 }
+
 
 export type ClusterSource =
   | "waiting"

@@ -83,7 +83,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
         content:
           "Kontinuierliches, kamerabasiertes Qualitäts-Dashboard für Fertigungslinien im Mittelstand.",
       },
-      { property: "og:title", content: "symplify – Prozess-Intelligenz" },
+      { property: "og:title", content: "symplify – Prozess-Intelligenz für die Fertigung" },
       {
         property: "og:description",
         content:
@@ -91,6 +91,12 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
+      { name: "twitter:title", content: "symplify – Prozess-Intelligenz für die Fertigung" },
+      { name: "description", content: "Kontinuierliches, kamerabasiertes Qualitäts-Dashboard für Fertigungslinien. Zykluszeiten, Fehlerereignisse und Prozesskategorien auf einen Blick." },
+      { property: "og:description", content: "Kontinuierliches, kamerabasiertes Qualitäts-Dashboard für Fertigungslinien. Zykluszeiten, Fehlerereignisse und Prozesskategorien auf einen Blick." },
+      { name: "twitter:description", content: "Kontinuierliches, kamerabasiertes Qualitäts-Dashboard für Fertigungslinien. Zykluszeiten, Fehlerereignisse und Prozesskategorien auf einen Blick." },
+      { property: "og:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/3086c157-50ba-4840-9716-3816cccd09b9/id-preview-aa703c23--aa967911-b7ce-4c42-962d-328bdf107bfa.lovable.app-1783445415827.png" },
+      { name: "twitter:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/3086c157-50ba-4840-9716-3816cccd09b9/id-preview-aa703c23--aa967911-b7ce-4c42-962d-328bdf107bfa.lovable.app-1783445415827.png" },
     ],
     links: [
       {

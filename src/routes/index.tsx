@@ -89,15 +89,10 @@ function Dashboard() {
           <div>
             <h1 className="text-lg font-semibold text-foreground">Übersicht</h1>
             <p className="text-xs text-muted-foreground mt-0.5">
-              Live-Analyse · {rangeLabel} ·{" "}
-              {now.toLocaleString("de-DE", {
-                day: "2-digit",
-                month: "2-digit",
-                year: "numeric",
-                hour: "2-digit",
-                minute: "2-digit",
-              })}
+              Live-Analyse · {rangeLabel}
+              {nowLabel && <> · {nowLabel}</>}
             </p>
+
           </div>
           <div className="flex items-center gap-3">
             <HeaderControls

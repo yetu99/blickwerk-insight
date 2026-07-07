@@ -39,7 +39,7 @@ export function HeaderControls({ lineId, onLineChange, presetId, onPresetChange 
             Produktionslinie
           </DropdownMenuLabel>
           <DropdownMenuSeparator />
-          {LINES.map((l) => (
+          {allLines.map(({ line: l, savedAt }) => (
             <DropdownMenuItem
               key={l.id}
               onSelect={() => onLineChange(l.id)}
@@ -49,13 +49,21 @@ export function HeaderControls({ lineId, onLineChange, presetId, onPresetChange 
                 {l.id === lineId && <Check className="h-3.5 w-3.5 text-primary" />}
               </div>
               <div className="flex-1 min-w-0">
-                <div className="text-sm font-medium text-foreground">{l.name}</div>
+                <div className="text-sm font-medium text-foreground flex items-center gap-2">
+                  {l.name}
+                  {savedAt !== null && (
+                    <span className="text-[9px] uppercase tracking-wider text-primary bg-primary/10 border border-primary/30 rounded px-1 py-0.5">
+                      Neu
+                    </span>
+                  )}
+                </div>
                 <div className="text-[11px] text-muted-foreground">
                   {l.location} · {l.camera_id}
                 </div>
               </div>
             </DropdownMenuItem>
           ))}
+
         </DropdownMenuContent>
       </DropdownMenu>
 

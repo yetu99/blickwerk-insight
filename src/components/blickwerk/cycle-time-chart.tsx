@@ -64,7 +64,8 @@ export function CycleTimeChart({ cycles, onCycleClick }: Props) {
       </div>
       <div className="h-64">
         <ResponsiveContainer width="100%" height="100%">
-          <ComposedChart data={data} margin={{ top: 5, right: 8, left: -12, bottom: 0 }}>
+          <ComposedChart data={data} margin={{ top: 5, right: 8, left: -12, bottom: 0 }} onClick={handleClick}>
+            <style>{`.recharts-wrapper { cursor: ${onCycleClick ? "pointer" : "default"}; }`}</style>
             <CartesianGrid stroke="var(--border)" strokeDasharray="3 3" vertical={false} />
             <XAxis
               dataKey="idx"

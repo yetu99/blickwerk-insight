@@ -22,11 +22,8 @@ export interface SzenarioVideoHandle {
 }
 
 const CATEGORY_DOT: Record<EventCategory, string> = {
-  Fehlgriff: "bg-chart-2 border-chart-2",
-  Farbverwechslung: "bg-chart-4 border-chart-4",
-  Taktzeitueberschreitung: "bg-chart-3 border-chart-3",
-  Zoegern: "bg-chart-1 border-chart-1",
-  Prozessunterbrechung: "bg-chart-5 border-chart-5",
+  Neutral: "bg-[#14B8A6] border-[#14B8A6]",
+  Fehler: "bg-[#DC2626] border-[#DC2626]",
 };
 
 function fmt(sec: number) {

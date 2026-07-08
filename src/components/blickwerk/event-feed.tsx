@@ -3,19 +3,13 @@ import type { ProcessEvent, EventCategory, Severity } from "@/lib/mock-data";
 import { CATEGORY_LABELS } from "@/lib/mock-data";
 
 const CATEGORY_COLOR: Record<EventCategory, string> = {
-  Fehlgriff: "bg-chart-2/10 text-chart-2 border-chart-2/30",
-  Farbverwechslung: "bg-chart-4/10 text-chart-4 border-chart-4/30",
-  Taktzeitueberschreitung: "bg-chart-3/10 text-chart-3 border-chart-3/30",
-  Zoegern: "bg-chart-1/10 text-chart-1 border-chart-1/30",
-  Prozessunterbrechung: "bg-chart-5/10 text-chart-5 border-chart-5/30",
+  Neutral: "bg-[#14B8A6]/10 text-[#14B8A6] border-[#14B8A6]/40",
+  Fehler: "bg-[#DC2626]/10 text-[#DC2626] border-[#DC2626]/40",
 };
 
 const CATEGORY_BAR: Record<EventCategory, string> = {
-  Fehlgriff: "bg-chart-2",
-  Farbverwechslung: "bg-chart-4",
-  Taktzeitueberschreitung: "bg-chart-3",
-  Zoegern: "bg-chart-1",
-  Prozessunterbrechung: "bg-chart-5",
+  Neutral: "bg-[#14B8A6]",
+  Fehler: "bg-[#DC2626]",
 };
 
 const SEVERITY_STYLES: Record<Severity, { label: string; className: string }> = {
@@ -43,11 +37,8 @@ export function EventFeed({ events, onEventClick, selectedEventId }: Props) {
 
   const counts = useMemo(() => {
     const c: Record<EventCategory, number> = {
-      Fehlgriff: 0,
-      Farbverwechslung: 0,
-      Taktzeitueberschreitung: 0,
-      Zoegern: 0,
-      Prozessunterbrechung: 0,
+      Neutral: 0,
+      Fehler: 0,
     };
     for (const e of events) c[e.category]++;
     return c;
@@ -72,6 +63,7 @@ export function EventFeed({ events, onEventClick, selectedEventId }: Props) {
   const handleRowClick = (e: ProcessEvent) => {
     onEventClick?.(e);
   };
+
 
   return (
     <div className="rounded-xl bg-card border border-border shadow-[var(--shadow-card)] flex flex-col h-full">

@@ -131,6 +131,7 @@ export function BlickWerkSidebar({ activeLine }: { activeLine: Line }) {
 
         <nav className={`flex-1 py-4 space-y-1 overflow-y-auto ${collapsed ? "px-2" : "px-3"}`}>
           {mainNav.map(renderNavItem)}
+          <SidebarChat collapsed={collapsed} defaultLineId={activeLine.id} />
         </nav>
 
         <div
@@ -138,7 +139,6 @@ export function BlickWerkSidebar({ activeLine }: { activeLine: Line }) {
             collapsed ? "px-2 py-3" : "px-3 py-3"
           }`}
         >
-          <SidebarChat collapsed={collapsed} defaultLineId={activeLine.id} />
           {renderNavItem(settingsNav)}
           {collapsed ? (
             <Tooltip>

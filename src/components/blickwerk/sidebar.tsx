@@ -129,13 +129,14 @@ export function BlickWerkSidebar({ activeLine }: { activeLine: Line }) {
           )}
         </div>
 
-        <nav className={`flex-1 py-4 space-y-1 overflow-y-auto ${collapsed ? "px-2" : "px-3"}`}>
-          {mainNav.map(renderNavItem)}
+        <nav className={`flex-1 py-4 flex flex-col overflow-y-auto ${collapsed ? "px-2" : "px-3"}`}>
+          <div className="space-y-1">
+            {mainNav.map(renderNavItem)}
+          </div>
+          <div className="mt-auto pt-4">
+            <SidebarChat collapsed={collapsed} defaultLineId={activeLine.id} />
+          </div>
         </nav>
-
-        <div className={`shrink-0 border-t border-sidebar-border ${collapsed ? "px-2 py-2" : "px-3 py-2"}`}>
-          <SidebarChat collapsed={collapsed} defaultLineId={activeLine.id} />
-        </div>
 
         <div
           className={`border-t border-sidebar-border space-y-2 ${

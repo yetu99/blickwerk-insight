@@ -70,7 +70,9 @@ const LINE_SLOTS: { id: string; x: number; y: number; w: number; h: number }[] =
 
 function WerkhallePage() {
   const allLines = useAllLines();
+  const navigate = useNavigate();
   useSzenarienForLine(allLines[0]?.line.id ?? "");
+
 
   const zones = useMemo(() => {
     return LINE_SLOTS.map((slot) => {

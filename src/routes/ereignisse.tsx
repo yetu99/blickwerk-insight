@@ -1,202 +1,388 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMemo } from "react";
-import { AlertTriangle, TrendingUp, Lightbulb } from "lucide-react";
+import { Factory, ArrowRight } from "lucide-react";
 import { BlickWerkSidebar } from "@/components/blickwerk/sidebar";
-import {
-  LINES,
-  CATEGORY_LABELS,
-  CATEGORY_TO_STEP,
-  computeKpis,
-  type EventCategory,
-} from "@/lib/mock-data";
+import { LINES, computeKpis } from "@/lib/mock-data";
 import { useAllLines, useSzenarienForLine, getSzenarienForLine } from "@/lib/runs-store";
 
 export const Route = createFileRoute("/ereignisse")({
   head: () => ({
     meta: [
-      { title: "Ereignisse – symplify" },
+      { title: "Werkhalle – symplify" },
       {
         name: "description",
         content:
-          "Linienübergreifende Fehleranalyse: Ranking, dominierende Kategorien und Muster.",
+          "Maßstabsgetreuer 2D-Grundriss der Werkhalle mit farbcodierten Zonen nach Fehlerquote.",
       },
     ],
   }),
-  component: EreignissePage,
+  component: WerkhallePage,
 });
 
-interface LineStepRow {
-  lineId: string;
-  lineName: string;
-  step: string;
-  errorRate: number;
-  dominantCategory: EventCategory | null;
-  cycles: number;
-  events: number;
+type Status = "ok" | "warn" | "bad";
+
+function statusFor(errorRate: number): Status {
+  if (errorRate < 10) return "ok";
+  if (errorRate < 15) return "warn";
+  return "bad";
 }
 
-function EreignissePage() {
+const STATUS_FILL: Record<Status, string> = {
+  ok: "var(--success)",
+  warn: "var(--warning)",
+  bad: "var(--destructive)",
+};
+
+const STATUS_LABEL: Record<Status, string> = {
+  ok: "Stabil",
+  warn: "Beobachten",
+  bad: "Kritisch",
+};
+
+// Layout of the hall in an abstract 1200x720 grid.
+// Coordinates map real spatial arrangement: entrance/warehouse left,
+// production lines in the center, packaging/shipping right.
+interface Zone {
+  id: string;
+  label: string;
+  x: number;
+  y: number;
+  w: number;
+  h: number;
+  kind: "line" | "aux";
+  auxLabel?: string;
+}
+
+const AUX_ZONES: Zone[] = [
+  { id: "aux-lager", label: "Wareneingang & Lager", x: 20, y: 20, w: 220, h: 320, kind: "aux" },
+  { id: "aux-office", label: "Leitstand", x: 20, y: 360, w: 220, h: 140, kind: "aux" },
+  { id: "aux-qs", label: "Qualitätssicherung", x: 20, y: 520, w: 220, h: 180, kind: "aux" },
+  { id: "aux-pack", label: "Verpackung", x: 960, y: 20, w: 220, h: 320, kind: "aux" },
+  { id: "aux-versand", label: "Versand", x: 960, y: 360, w: 220, h: 340, kind: "aux" },
+];
+
+const LINE_SLOTS: { id: string; x: number; y: number; w: number; h: number }[] = [
+  { id: "line-1", x: 280, y: 40, w: 640, h: 190 },
+  { id: "line-2", x: 280, y: 260, w: 640, h: 190 },
+  { id: "line-3", x: 280, y: 480, w: 640, h: 200 },
+];
+
+function WerkhallePage() {
   const allLines = useAllLines();
-  // Touch szenarien for reactivity of the first line so navigation-triggered
-  // additions rerender.
   useSzenarienForLine(allLines[0]?.line.id ?? "");
 
-  const rows = useMemo<LineStepRow[]>(() => {
-    const out: LineStepRow[] = [];
-    for (const { line } of allLines) {
-      // Use the latest szenario per line as representative.
-      const szList = getSzenarienForLine(line.id);
-      const sz = szList[0];
-      if (!sz) continue;
-
-      // Group events by step.
-      const byStep = new Map<string, EventCategory[]>();
-      for (const e of sz.events) {
-        const step = CATEGORY_TO_STEP[e.category];
-        const arr = byStep.get(step) ?? [];
-        arr.push(e.category);
-        byStep.set(step, arr);
-      }
-      for (const [step, cats] of byStep.entries()) {
-        const counts = cats.reduce<Record<string, number>>((acc, c) => {
-          acc[c] = (acc[c] ?? 0) + 1;
-          return acc;
-        }, {});
-        const dominant = Object.entries(counts).sort(
-          (a, b) => b[1] - a[1],
-        )[0]?.[0] as EventCategory | undefined;
-        out.push({
-          lineId: line.id,
-          lineName: line.name,
-          step,
-          errorRate: (cats.length / Math.max(1, sz.cycles.length)) * 100,
-          dominantCategory: dominant ?? null,
-          cycles: sz.cycles.length,
-          events: cats.length,
-        });
-      }
-    }
-    return out.sort((a, b) => b.errorRate - a.errorRate);
+  const zones = useMemo(() => {
+    return LINE_SLOTS.map((slot) => {
+      const item = allLines.find((l) => l.line.id === slot.id);
+      const line = item?.line;
+      const sz = getSzenarienForLine(slot.id)[0];
+      const kpis = sz ? computeKpis(sz.cycles, sz.events) : null;
+      const errorRate = kpis?.errorRate ?? 0;
+      return {
+        slot,
+        line,
+        kpis,
+        errorRate,
+        status: statusFor(errorRate),
+        hasData: !!sz,
+      };
+    });
   }, [allLines]);
 
-  const insights = useMemo(() => generateInsights(allLines), [allLines]);
+  const summary = useMemo(() => {
+    const c = { ok: 0, warn: 0, bad: 0 };
+    for (const z of zones) c[z.status]++;
+    return c;
+  }, [zones]);
 
   return (
     <div className="flex min-h-screen w-full bg-background">
       <BlickWerkSidebar activeLine={LINES[0]} />
+
       <main className="flex-1 min-w-0 flex flex-col">
         <header className="border-b border-border bg-card px-6 py-4">
-          <h1 className="text-lg font-semibold text-foreground">Ereignisse</h1>
-          <p className="text-xs text-muted-foreground mt-0.5">
-            Linien-übergreifende Fehleranalyse über alle gespeicherten Szenarien.
-          </p>
-        </header>
-
-        <div className="flex-1 p-6 space-y-6 max-w-6xl">
-          <section className="rounded-xl border border-border bg-card shadow-[var(--shadow-card)]">
-            <div className="p-5 border-b border-border">
-              <h2 className="text-sm font-semibold text-foreground flex items-center gap-2">
-                <TrendingUp className="h-4 w-4 text-primary" />
-                Fehleranfälligkeit nach Linie & Prozessschritt
-              </h2>
+          <div className="flex items-start justify-between gap-4 flex-wrap">
+            <div className="min-w-0">
+              <h1 className="text-lg font-semibold text-foreground">Werkhalle</h1>
               <p className="text-xs text-muted-foreground mt-0.5">
-                Absteigend nach Fehlerquote. Prozessschritt aus Kategorie
-                abgeleitet.
+                Maßstabsgetreuer Grundriss · Zonen nach Fehlerquote eingefärbt
               </p>
             </div>
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead className="bg-muted/40 text-[11px] uppercase tracking-wider text-muted-foreground">
-                  <tr>
-                    <th className="text-left px-5 py-2.5 font-medium">Linie</th>
-                    <th className="text-left px-5 py-2.5 font-medium">
-                      Prozessschritt
-                    </th>
-                    <th className="text-right px-5 py-2.5 font-medium">
-                      Fehlerquote
-                    </th>
-                    <th className="text-left px-5 py-2.5 font-medium">
-                      Dominierende Kategorie
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-border">
-                  {rows.length === 0 ? (
-                    <tr>
-                      <td
-                        colSpan={4}
-                        className="px-5 py-6 text-center text-muted-foreground text-xs"
-                      >
-                        Noch keine Ereignisdaten verfügbar.
-                      </td>
-                    </tr>
-                  ) : (
-                    rows.map((r, i) => (
-                      <tr key={`${r.lineId}-${r.step}-${i}`}>
-                        <td className="px-5 py-2.5 text-foreground">
-                          {r.lineName}
-                        </td>
-                        <td className="px-5 py-2.5 text-foreground">{r.step}</td>
-                        <td className="px-5 py-2.5 text-right tabular-nums font-medium">
-                          <span
-                            className={
-                              r.errorRate > 15
-                                ? "text-destructive"
-                                : r.errorRate > 8
-                                  ? "text-warning-foreground"
-                                  : "text-foreground"
-                            }
-                          >
-                            {r.errorRate.toFixed(1).replace(".", ",")} %
-                          </span>
-                        </td>
-                        <td className="px-5 py-2.5 text-muted-foreground text-xs">
-                          {r.dominantCategory
-                            ? CATEGORY_LABELS[r.dominantCategory]
-                            : "—"}
-                        </td>
-                      </tr>
-                    ))
-                  )}
-                </tbody>
-              </table>
+            <div className="flex items-center gap-3 text-xs">
+              <LegendPill color={STATUS_FILL.ok} label={`Stabil (<10 %) · ${summary.ok}`} />
+              <LegendPill color={STATUS_FILL.warn} label={`Beobachten (10–15 %) · ${summary.warn}`} />
+              <LegendPill color={STATUS_FILL.bad} label={`Kritisch (>15 %) · ${summary.bad}`} />
             </div>
+          </div>
+        </header>
+
+        <div className="flex-1 p-6 space-y-6">
+          {/* Floor plan */}
+          <section className="rounded-xl bg-card border border-border p-4 shadow-[var(--shadow-card)]">
+            <div className="w-full overflow-hidden rounded-lg bg-[color-mix(in_oklab,var(--muted)_60%,transparent)] border border-border">
+              <svg
+                viewBox="0 0 1200 720"
+                className="w-full h-auto block"
+                role="img"
+                aria-label="Grundriss der Werkhalle"
+              >
+                {/* subtle grid */}
+                <defs>
+                  <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
+                    <path
+                      d="M 40 0 L 0 0 0 40"
+                      fill="none"
+                      stroke="var(--border)"
+                      strokeWidth="0.5"
+                      opacity="0.5"
+                    />
+                  </pattern>
+                </defs>
+                <rect x="0" y="0" width="1200" height="720" fill="url(#grid)" />
+
+                {/* Outer hall wall */}
+                <rect
+                  x="8"
+                  y="8"
+                  width="1184"
+                  height="704"
+                  fill="none"
+                  stroke="var(--foreground)"
+                  strokeOpacity="0.35"
+                  strokeWidth="3"
+                  rx="6"
+                />
+
+                {/* Aux zones */}
+                {AUX_ZONES.map((z) => (
+                  <g key={z.id}>
+                    <rect
+                      x={z.x}
+                      y={z.y}
+                      width={z.w}
+                      height={z.h}
+                      fill="var(--muted)"
+                      stroke="var(--border)"
+                      strokeWidth="1.5"
+                      rx="6"
+                    />
+                    <text
+                      x={z.x + z.w / 2}
+                      y={z.y + 22}
+                      textAnchor="middle"
+                      fill="var(--muted-foreground)"
+                      fontSize="12"
+                      fontWeight="500"
+                    >
+                      {z.label}
+                    </text>
+                  </g>
+                ))}
+
+                {/* Central corridor label */}
+                <text
+                  x={600}
+                  y={710}
+                  textAnchor="middle"
+                  fill="var(--muted-foreground)"
+                  fontSize="10"
+                  opacity="0.7"
+                >
+                  ← Materialfluss · Halle 1/2 · 24 m × 14 m ↑
+                </text>
+
+                {/* Line zones */}
+                {zones.map(({ slot, line, errorRate, status, hasData }) => {
+                  const fill = STATUS_FILL[status];
+                  return (
+                    <g key={slot.id} className="cursor-pointer">
+                      <Link to="/linien/$lineId" params={{ lineId: slot.id }}>
+                        <rect
+                          x={slot.x}
+                          y={slot.y}
+                          width={slot.w}
+                          height={slot.h}
+                          fill={fill}
+                          fillOpacity={hasData ? 0.22 : 0.08}
+                          stroke={fill}
+                          strokeWidth={2.5}
+                          rx={8}
+                        />
+                        {/* Machine iconography — conveyor + stations */}
+                        <rect
+                          x={slot.x + 24}
+                          y={slot.y + slot.h / 2 - 8}
+                          width={slot.w - 48}
+                          height={16}
+                          fill="var(--card)"
+                          stroke={fill}
+                          strokeOpacity={0.6}
+                          strokeWidth={1}
+                          rx={2}
+                        />
+                        {[0.2, 0.45, 0.7].map((f, i) => (
+                          <circle
+                            key={i}
+                            cx={slot.x + 24 + (slot.w - 48) * f}
+                            cy={slot.y + slot.h / 2}
+                            r={12}
+                            fill="var(--card)"
+                            stroke={fill}
+                            strokeWidth={1.5}
+                          />
+                        ))}
+
+                        {/* Header label */}
+                        <text
+                          x={slot.x + 20}
+                          y={slot.y + 28}
+                          fill="var(--foreground)"
+                          fontSize="15"
+                          fontWeight="700"
+                        >
+                          {line?.name ?? slot.id}
+                        </text>
+                        <text
+                          x={slot.x + 20}
+                          y={slot.y + 46}
+                          fill="var(--muted-foreground)"
+                          fontSize="11"
+                        >
+                          {line?.location} · {line?.camera_id}
+                        </text>
+
+                        {/* Big error rate badge on the right */}
+                        <g>
+                          <rect
+                            x={slot.x + slot.w - 160}
+                            y={slot.y + 14}
+                            width={140}
+                            height={54}
+                            rx={8}
+                            fill="var(--card)"
+                            stroke={fill}
+                            strokeWidth={2}
+                          />
+                          <text
+                            x={slot.x + slot.w - 90}
+                            y={slot.y + 40}
+                            textAnchor="middle"
+                            fill={fill}
+                            fontSize="22"
+                            fontWeight="800"
+                          >
+                            {hasData ? `${errorRate.toFixed(1).replace(".", ",")} %` : "—"}
+                          </text>
+                          <text
+                            x={slot.x + slot.w - 90}
+                            y={slot.y + 58}
+                            textAnchor="middle"
+                            fill="var(--muted-foreground)"
+                            fontSize="10"
+                            fontWeight="600"
+                            letterSpacing="0.5"
+                          >
+                            FEHLERQUOTE
+                          </text>
+                        </g>
+
+                        {/* Status pill bottom-left */}
+                        <g>
+                          <rect
+                            x={slot.x + 20}
+                            y={slot.y + slot.h - 34}
+                            width={110}
+                            height={22}
+                            rx={11}
+                            fill={fill}
+                            fillOpacity={0.15}
+                            stroke={fill}
+                            strokeWidth={1}
+                          />
+                          <circle
+                            cx={slot.x + 32}
+                            cy={slot.y + slot.h - 23}
+                            r={4}
+                            fill={fill}
+                          />
+                          <text
+                            x={slot.x + 42}
+                            y={slot.y + slot.h - 19}
+                            fill={fill}
+                            fontSize="11"
+                            fontWeight="600"
+                          >
+                            {STATUS_LABEL[status]}
+                          </text>
+                        </g>
+                      </Link>
+                    </g>
+                  );
+                })}
+              </svg>
+            </div>
+            <p className="mt-3 text-[11px] text-muted-foreground text-center">
+              Klick auf eine Linie öffnet die Detailansicht mit Fehleranalyse und Automatisierungspotenzial.
+            </p>
           </section>
 
-          <section>
-            <h2 className="text-sm font-semibold text-foreground mb-3 flex items-center gap-2">
-              <Lightbulb className="h-4 w-4 text-primary" />
-              Linienübergreifende Muster
-            </h2>
-            {insights.length === 0 ? (
-              <div className="text-xs text-muted-foreground rounded-lg border border-dashed border-border p-4">
-                Zu wenig Daten für Muster-Analyse. Bitte weitere Szenarien
-                hinzufügen.
-              </div>
-            ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {insights.map((insight, i) => (
-                  <div
-                    key={i}
-                    className="rounded-xl border border-border bg-card p-4 shadow-[var(--shadow-card)]"
-                  >
-                    <div className="flex items-start gap-3">
-                      <div className="h-8 w-8 rounded-md bg-primary/10 text-primary flex items-center justify-center shrink-0">
-                        <AlertTriangle className="h-4 w-4" />
+          {/* Zone list (accessible fallback + quick jump) */}
+          <section className="grid grid-cols-1 md:grid-cols-3 gap-3">
+            {zones.map(({ slot, line, kpis, errorRate, status, hasData }) => {
+              const fill = STATUS_FILL[status];
+              return (
+                <Link
+                  key={slot.id}
+                  to="/linien/$lineId"
+                  params={{ lineId: slot.id }}
+                  className="group rounded-xl border border-border bg-card p-4 shadow-[var(--shadow-card)] hover:border-primary/50 transition-colors"
+                >
+                  <div className="flex items-start justify-between gap-3 mb-3">
+                    <div className="min-w-0">
+                      <div className="flex items-center gap-2 mb-0.5">
+                        <Factory className="h-4 w-4 text-primary shrink-0" />
+                        <h3 className="text-sm font-semibold text-foreground truncate">
+                          {line?.name ?? slot.id}
+                        </h3>
                       </div>
-                      <div className="min-w-0">
-                        <div className="text-xs font-semibold uppercase tracking-wider text-primary mb-1">
-                          {insight.title}
-                        </div>
-                        <p className="text-sm text-foreground leading-relaxed">
-                          {insight.body}
-                        </p>
+                      <p className="text-xs text-muted-foreground truncate">
+                        {line?.location}
+                      </p>
+                    </div>
+                    <ArrowRight className="h-4 w-4 text-muted-foreground group-hover:text-primary group-hover:translate-x-0.5 transition-all shrink-0" />
+                  </div>
+                  <div className="flex items-baseline justify-between">
+                    <div>
+                      <div className="text-2xl font-bold tabular-nums" style={{ color: fill }}>
+                        {hasData ? `${errorRate.toFixed(1).replace(".", ",")} %` : "—"}
+                      </div>
+                      <div className="text-[10px] uppercase tracking-wider text-muted-foreground">
+                        Fehlerquote
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <div className="text-xs text-foreground tabular-nums">
+                        {kpis ? `${kpis.avgCycle.toFixed(2).replace(".", ",")} s` : "—"}
+                      </div>
+                      <div className="text-[10px] uppercase tracking-wider text-muted-foreground">
+                        Ø Taktzeit
                       </div>
                     </div>
                   </div>
-                ))}
-              </div>
-            )}
+                  <div
+                    className="mt-3 inline-flex items-center gap-1.5 rounded-full px-2 py-0.5 text-[11px] font-medium"
+                    style={{
+                      backgroundColor: `color-mix(in oklab, ${fill} 15%, transparent)`,
+                      color: fill,
+                      border: `1px solid color-mix(in oklab, ${fill} 40%, transparent)`,
+                    }}
+                  >
+                    <span className="h-1.5 w-1.5 rounded-full" style={{ backgroundColor: fill }} />
+                    {STATUS_LABEL[status]}
+                  </div>
+                </Link>
+              );
+            })}
           </section>
         </div>
       </main>
@@ -204,105 +390,18 @@ function EreignissePage() {
   );
 }
 
-function generateInsights(
-  allLines: ReturnType<typeof useAllLines>,
-): { title: string; body: string }[] {
-  const insights: { title: string; body: string }[] = [];
-
-  // Per-line category share and overall.
-  const perLine = allLines
-    .map(({ line }) => {
-      const sz = getSzenarienForLine(line.id)[0];
-      if (!sz || sz.events.length === 0) return null;
-      const total = sz.events.length;
-      const cycles = sz.cycles.length || 1;
-      const counts: Record<string, number> = {};
-      for (const e of sz.events) counts[e.category] = (counts[e.category] ?? 0) + 1;
-      return { line, total, cycles, counts, errorRate: (total / cycles) * 100 };
-    })
-    .filter(Boolean) as {
-    line: (typeof allLines)[number]["line"];
-    total: number;
-    cycles: number;
-    counts: Record<string, number>;
-    errorRate: number;
-  }[];
-
-  if (perLine.length < 2) return insights;
-
-  // Insight 1: dominant category that appears above-average in multiple lines.
-  const catAvgShare: Record<string, number[]> = {};
-  for (const p of perLine) {
-    for (const [cat, c] of Object.entries(p.counts)) {
-      const share = c / p.total;
-      (catAvgShare[cat] ??= []).push(share);
-    }
-  }
-  const flagged: { cat: EventCategory; lines: number }[] = [];
-  for (const [cat, shares] of Object.entries(catAvgShare)) {
-    const avg = shares.reduce((a, b) => a + b, 0) / shares.length;
-    const above = shares.filter((s) => s > 0.25).length;
-    if (above >= 2 && avg > 0.2) {
-      flagged.push({ cat: cat as EventCategory, lines: above });
-    }
-  }
-  flagged.sort((a, b) => b.lines - a.lines);
-  if (flagged.length > 0) {
-    const f = flagged[0];
-    const total = perLine.length;
-    insights.push({
-      title: "Kategorie-Cluster",
-      body: `„${CATEGORY_LABELS[f.cat]}" tritt in ${f.lines} von ${total} Linien überdurchschnittlich häufig auf. Ein linienübergreifender Fix (z. B. verbesserte Slot-Markierung oder ein gemeinsamer Kontrollschritt) hätte hier den größten Hebel.`,
-    });
-  }
-
-  // Insight 2: highest error rate outlier.
-  const sortedByRate = [...perLine].sort((a, b) => b.errorRate - a.errorRate);
-  const worst = sortedByRate[0];
-  const median = sortedByRate[Math.floor(sortedByRate.length / 2)].errorRate;
-  if (worst.errorRate > median * 1.5 && worst.errorRate > 8) {
-    const domCat = Object.entries(worst.counts).sort((a, b) => b[1] - a[1])[0]?.[0];
-    insights.push({
-      title: "Ausreißer-Linie",
-      body: `„${worst.line.name}" liegt mit ${worst.errorRate.toFixed(1).replace(".", ",")} % Fehlerquote deutlich über dem Median (${median.toFixed(1).replace(".", ",")} %). Hauptursache ist „${CATEGORY_LABELS[(domCat as EventCategory) ?? "Fehlgriff"]}" – ein gezielter Deep-Dive dieser Linie ist priorisiert lohnenswert.`,
-    });
-  }
-
-  // Insight 3: step concentration.
-  const stepTotals: Record<string, number> = {};
-  let grandTotal = 0;
-  for (const p of perLine) {
-    for (const [cat, c] of Object.entries(p.counts)) {
-      const step = CATEGORY_TO_STEP[cat as EventCategory];
-      stepTotals[step] = (stepTotals[step] ?? 0) + c;
-      grandTotal += c;
-    }
-  }
-  const topStep = Object.entries(stepTotals).sort((a, b) => b[1] - a[1])[0];
-  if (topStep && grandTotal > 0 && topStep[1] / grandTotal > 0.35) {
-    const pct = Math.round((topStep[1] / grandTotal) * 100);
-    insights.push({
-      title: "Prozessschritt-Hotspot",
-      body: `${pct} % aller Fehler entstehen am Schritt „${topStep[0]}". Investition in Sensorik oder Standardisierung an genau diesem Punkt reduziert die Gesamt-Fehlerlast am schnellsten.`,
-    });
-  }
-
-  // Insight 4: low-confidence review load.
-  let humanChecks = 0;
-  let allEvents = 0;
-  for (const p of perLine) {
-    const sz = getSzenarienForLine(p.line.id)[0];
-    if (!sz) continue;
-    humanChecks += sz.events.filter((e) => e.human_checkpoint_required).length;
-    allEvents += sz.events.length;
-  }
-  if (allEvents > 0 && humanChecks / allEvents > 0.1) {
-    const pct = Math.round((humanChecks / allEvents) * 100);
-    insights.push({
-      title: "Menschliche Rückfragen",
-      body: `${pct} % der Ereignisse erfordern eine menschliche Rückfrage (niedrige Konfidenz + mittlere/hohe Schwere). Ein zusätzliches Trainings-Sample-Set für den Vision-Cluster senkt hier Aufwand für den Schichtführer messbar.`,
-    });
-  }
-
-  return insights.slice(0, 4);
+function LegendPill({ color, label }: { color: string; label: string }) {
+  return (
+    <span
+      className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 border"
+      style={{
+        borderColor: `color-mix(in oklab, ${color} 40%, transparent)`,
+        backgroundColor: `color-mix(in oklab, ${color} 12%, transparent)`,
+        color: `color-mix(in oklab, ${color} 85%, var(--foreground))`,
+      }}
+    >
+      <span className="h-2 w-2 rounded-full" style={{ backgroundColor: color }} />
+      {label}
+    </span>
+  );
 }

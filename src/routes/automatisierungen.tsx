@@ -230,7 +230,10 @@ function AutomatisierungPage() {
             />
           </section>
 
-          {/* Digital-Twin-Visualisierung */}
+          {/* Frag den Digital Twin */}
+          <TwinChat />
+
+
           <section className="rounded-xl border border-border bg-card shadow-[var(--shadow-card)] overflow-hidden">
             <div className="flex items-center justify-between px-5 py-3 border-b border-border">
               <div>

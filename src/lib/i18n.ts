@@ -6,7 +6,7 @@ const DE: Dict = {
   "nav.neueAnalyse": "Neue Analyse",
   "nav.uebersicht": "Übersicht",
   "nav.linien": "Linien",
-  "nav.ereignisse": "Ereignisse",
+  "nav.ereignisse": "Werkhalle",
   "nav.automatisierungen": "Automatisierungen",
   "nav.einstellungen": "Einstellungen",
   "sidebar.activeLine": "Aktive Linie",

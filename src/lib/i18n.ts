@@ -7,7 +7,7 @@ const DE: Dict = {
   "nav.uebersicht": "Übersicht",
   "nav.linien": "Linien",
   "nav.ereignisse": "Werkhalle",
-  "nav.automatisierungen": "Automatisierungen",
+  "nav.automatisierungen": "Automatisierung",
   "nav.einstellungen": "Einstellungen",
   "sidebar.activeLine": "Aktive Linie",
   "sidebar.liveActive": "Live-Analyse aktiv",
@@ -20,7 +20,7 @@ const DE: Dict = {
   "page.ereignisse.subtitle": "Linien-übergreifende Fehleranalyse",
   "page.ereignisse.ranking": "Fehleranfälligkeit nach Linie & Prozessschritt",
   "page.ereignisse.patterns": "Linienübergreifende Muster",
-  "page.automatisierungen.title": "Automatisierungen",
+  "page.automatisierungen.title": "Automatisierung",
   "page.automatisierungen.currentState": "Prozess-Ist-Zustand",
   "page.automatisierungen.simulate": "Digitalen Zwilling simulieren",
   "page.automatisierungen.disclaimer":

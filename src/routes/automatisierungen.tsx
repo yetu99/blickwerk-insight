@@ -4,9 +4,9 @@ import { ArrowRight, Bot, Check, Loader2, Sparkles } from "lucide-react";
 import { BlickWerkSidebar } from "@/components/blickwerk/sidebar";
 import {
   LINES,
-  PROCESS_STEPS,
   CATEGORY_TO_STEP,
   computeKpis,
+  computeStepTimes,
   type ProcessStep,
 } from "@/lib/mock-data";
 import {

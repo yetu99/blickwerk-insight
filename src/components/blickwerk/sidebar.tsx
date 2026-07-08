@@ -114,18 +114,19 @@ export function BlickWerkSidebar({ activeLine }: { activeLine: Line }) {
               <img
                 src={logoUrl}
                 alt="symplify"
-                className="h-9 w-9 rounded-md bg-white p-1 shrink-0"
+                className="h-11 w-11 rounded-md bg-white p-1 shrink-0"
               />
               <div className="min-w-0 flex-1">
-                <div className="font-semibold tracking-tight text-base leading-tight">
+                <div className="font-semibold tracking-tight text-lg leading-tight">
                   symplify
                 </div>
-                <div className="text-[11px] uppercase tracking-wider text-sidebar-foreground/60">
-                  Prozess-Intelligenz
+                <div className="italic text-[12px] leading-tight text-sidebar-foreground/70 truncate">
+                  Symplicity that scales
                 </div>
               </div>
               {CollapseToggle}
             </div>
+
           )}
         </div>
 

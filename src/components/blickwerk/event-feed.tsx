@@ -1,5 +1,4 @@
 import { useMemo, useState } from "react";
-import { Filter } from "lucide-react";
 import type { ProcessEvent, EventCategory, Severity } from "@/lib/mock-data";
 import { CATEGORY_LABELS } from "@/lib/mock-data";
 import { EventDetailDialog } from "./event-detail-dialog";
@@ -10,6 +9,14 @@ const CATEGORY_COLOR: Record<EventCategory, string> = {
   Taktzeitueberschreitung: "bg-chart-3/10 text-chart-3 border-chart-3/30",
   Zoegern: "bg-chart-1/10 text-chart-1 border-chart-1/30",
   Prozessunterbrechung: "bg-chart-5/10 text-chart-5 border-chart-5/30",
+};
+
+const CATEGORY_BAR: Record<EventCategory, string> = {
+  Fehlgriff: "bg-chart-2",
+  Farbverwechslung: "bg-chart-4",
+  Taktzeitueberschreitung: "bg-chart-3",
+  Zoegern: "bg-chart-1",
+  Prozessunterbrechung: "bg-chart-5",
 };
 
 const SEVERITY_STYLES: Record<Severity, { label: string; className: string }> = {
@@ -35,6 +42,19 @@ export function EventFeed({ events, onEventClick }: Props) {
   const [active, setActive] = useState<Set<EventCategory>>(new Set());
   const [selected, setSelected] = useState<ProcessEvent | null>(null);
 
+  const counts = useMemo(() => {
+    const c: Record<EventCategory, number> = {
+      Fehlgriff: 0,
+      Farbverwechslung: 0,
+      Taktzeitueberschreitung: 0,
+      Zoegern: 0,
+      Prozessunterbrechung: 0,
+    };
+    for (const e of events) c[e.category]++;
+    return c;
+  }, [events]);
+  const maxCount = Math.max(1, ...Object.values(counts));
+
   const filtered = useMemo(() => {
     const sorted = [...events].sort((a, b) => b.timestamp - a.timestamp);
     if (active.size === 0) return sorted;
@@ -58,39 +78,52 @@ export function EventFeed({ events, onEventClick }: Props) {
   return (
     <div className="rounded-xl bg-card border border-border shadow-[var(--shadow-card)] flex flex-col h-full">
       <div className="p-5 border-b border-border">
-        <div className="flex items-center justify-between mb-3">
-          <div>
-            <h3 className="text-sm font-semibold text-foreground">Ereignis-Feed</h3>
-            <p className="text-xs text-muted-foreground mt-0.5">
-              {filtered.length} von {events.length} Ereignissen
-            </p>
-          </div>
-          <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-            <Filter className="h-3.5 w-3.5" />
-            Filter
-          </div>
+        <div className="mb-3">
+          <h3 className="text-sm font-semibold text-foreground">Ereignis-Feed</h3>
+          <p className="text-xs text-muted-foreground mt-0.5">
+            {filtered.length} von {events.length} Ereignissen · Klicke eine Kategorie zum Filtern
+          </p>
         </div>
-        <div className="flex flex-wrap gap-1.5">
+        <div className="flex flex-wrap gap-x-4 gap-y-2 no-print-interactive">
           {(Object.keys(CATEGORY_LABELS) as EventCategory[]).map((cat) => {
             const isActive = active.has(cat);
+            const count = counts[cat];
+            const pct = (count / maxCount) * 100;
             return (
               <button
                 key={cat}
                 onClick={() => toggle(cat)}
-                className={`px-2.5 py-1 rounded-md text-[11px] font-medium border transition-colors ${
-                  isActive
-                    ? "bg-primary text-primary-foreground border-primary"
-                    : "bg-background text-muted-foreground border-border hover:border-primary/50"
+                className={`group flex items-center gap-2 text-left ${
+                  isActive ? "" : "opacity-90 hover:opacity-100"
                 }`}
               >
-                {CATEGORY_LABELS[cat]}
+                <span
+                  className={`text-[11px] font-medium px-2 py-0.5 rounded-md border transition-colors ${
+                    isActive
+                      ? "bg-primary text-primary-foreground border-primary"
+                      : `${CATEGORY_COLOR[cat]} group-hover:border-primary/60`
+                  }`}
+                >
+                  {CATEGORY_LABELS[cat]}
+                </span>
+                <span className="flex items-center gap-1.5">
+                  <span className="relative h-1.5 w-16 rounded-full bg-muted overflow-hidden">
+                    <span
+                      className={`absolute inset-y-0 left-0 ${CATEGORY_BAR[cat]} rounded-full`}
+                      style={{ width: `${pct}%` }}
+                    />
+                  </span>
+                  <span className="text-[11px] tabular-nums text-muted-foreground w-5 text-right">
+                    {count}
+                  </span>
+                </span>
               </button>
             );
           })}
           {active.size > 0 && (
             <button
               onClick={() => setActive(new Set())}
-              className="px-2 py-1 text-[11px] text-muted-foreground hover:text-foreground"
+              className="text-[11px] text-muted-foreground hover:text-foreground underline"
             >
               Zurücksetzen
             </button>

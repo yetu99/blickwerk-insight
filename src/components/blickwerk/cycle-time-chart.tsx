@@ -14,9 +14,10 @@ import { median } from "@/lib/mock-data";
 
 interface Props {
   cycles: Cycle[];
+  onCycleClick?: (videoTimestampStart: number) => void;
 }
 
-export function CycleTimeChart({ cycles }: Props) {
+export function CycleTimeChart({ cycles, onCycleClick }: Props) {
   const med = median(cycles.map((c) => c.duration_sec));
   const threshold = med * 1.5;
 
@@ -28,9 +29,17 @@ export function CycleTimeChart({ cycles }: Props) {
     }),
     duration: c.duration_sec,
     outlier: c.duration_sec > threshold ? c.duration_sec : null,
+    vStart: c.video_timestamp_start,
   }));
 
   const outliers = data.filter((d) => d.outlier != null).length;
+
+  const handleClick = (state: unknown) => {
+    if (!onCycleClick) return;
+    const s = state as { activePayload?: Array<{ payload?: { vStart?: number } }> };
+    const v = s?.activePayload?.[0]?.payload?.vStart;
+    if (typeof v === "number") onCycleClick(v);
+  };
 
   return (
     <div className="rounded-xl bg-card border border-border p-5 shadow-[var(--shadow-card)]">
@@ -55,7 +64,7 @@ export function CycleTimeChart({ cycles }: Props) {
       </div>
       <div className="h-64">
         <ResponsiveContainer width="100%" height="100%">
-          <ComposedChart data={data} margin={{ top: 5, right: 8, left: -12, bottom: 0 }}>
+          <ComposedChart data={data} margin={{ top: 5, right: 8, left: -12, bottom: 0 }} onClick={handleClick} style={{ cursor: onCycleClick ? "pointer" : "default" }}>
             <CartesianGrid stroke="var(--border)" strokeDasharray="3 3" vertical={false} />
             <XAxis
               dataKey="idx"

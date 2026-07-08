@@ -4,9 +4,9 @@ import { ArrowRight, Bot, Check, Loader2, Sparkles } from "lucide-react";
 import { BlickWerkSidebar } from "@/components/blickwerk/sidebar";
 import {
   LINES,
-  PROCESS_STEPS,
   CATEGORY_TO_STEP,
   computeKpis,
+  computeStepTimes,
   type ProcessStep,
 } from "@/lib/mock-data";
 import {
@@ -82,17 +82,7 @@ function AutomatisierungenPage() {
 
   const stepData = useMemo(() => {
     if (!activeSz) return null;
-    const cyc = activeSz.cycles;
-    const avgCycle = cyc.length
-      ? cyc.reduce((s, c) => s + c.duration_sec, 0) / cyc.length
-      : 5;
-    // Weights per step (fixed ratios of a cycle for demo).
-    const weights: Record<ProcessStep, number> = {
-      Pick: 0.32,
-      Place: 0.28,
-      Kontrolle: 0.22,
-      Korrektur: 0.18,
-    };
+    const steps = computeStepTimes(activeSz.cycles);
     // Count timwoods_skills events per step for badges.
     const skillsByStep: Record<ProcessStep, number> = {
       Pick: 0,
@@ -111,14 +101,13 @@ function AutomatisierungenPage() {
       totalByStep[step]++;
       if (e.cluster_source === "timwoods_skills") skillsByStep[step]++;
     }
-    const cyclesN = Math.max(1, cyc.length);
-    return PROCESS_STEPS.map((step) => {
-      const avgTime = avgCycle * weights[step];
-      const skillsRatio = skillsByStep[step] / cyclesN;
+    const cyclesN = Math.max(1, activeSz.cycles.length);
+    return steps.map((s) => {
+      const skillsRatio = skillsByStep[s.step] / cyclesN;
       let badge: Badge = "good";
       if (skillsRatio > 0.15) badge = "no";
       else if (skillsRatio > 0.05) badge = "limited";
-      return { step, avgTime, badge, events: totalByStep[step] };
+      return { step: s.step, avgTime: s.avgSec, badge, events: totalByStep[s.step] };
     });
   }, [activeSz]);
 

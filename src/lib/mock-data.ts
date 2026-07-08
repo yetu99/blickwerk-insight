@@ -89,6 +89,44 @@ export const CATEGORY_TO_STEP: Record<EventCategory, ProcessStep> = {
 
 export const PROCESS_STEPS: ProcessStep[] = ["Pick", "Place", "Kontrolle", "Korrektur"];
 
+export const STEP_WEIGHTS: Record<ProcessStep, number> = {
+  Pick: 0.32,
+  Place: 0.28,
+  Kontrolle: 0.22,
+  Korrektur: 0.18,
+};
+
+export interface StepTimeInfo {
+  step: ProcessStep;
+  minSec: number;
+  maxSec: number;
+  avgSec: number;
+}
+
+/**
+ * Compute per-step time min/max/avg by distributing each cycle's duration
+ * across the four process steps using fixed weights. Reused by both the
+ * Übersicht flow diagram and the Automatisierungen "Prozess-Ist-Zustand".
+ */
+export function computeStepTimes(cycles: Cycle[]): StepTimeInfo[] {
+  if (!cycles.length) {
+    return PROCESS_STEPS.map((step) => ({ step, minSec: 0, maxSec: 0, avgSec: 0 }));
+  }
+  const durations = cycles.map((c) => c.duration_sec);
+  const minD = Math.min(...durations);
+  const maxD = Math.max(...durations);
+  const avgD = durations.reduce((a, b) => a + b, 0) / durations.length;
+  return PROCESS_STEPS.map((step) => {
+    const w = STEP_WEIGHTS[step];
+    return {
+      step,
+      minSec: minD * w,
+      maxSec: maxD * w,
+      avgSec: avgD * w,
+    };
+  });
+}
+
 const CATEGORY_DESCRIPTIONS: Record<EventCategory, string[]> = {
   Fehlgriff: [
     "Bauteil fiel beim Aufnehmen aus dem Greifer.",

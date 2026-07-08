@@ -154,6 +154,10 @@
 }
 
 @media print {
+  @page {
+    margin: 12mm;
+    size: A4;
+  }
   .no-print,
   .no-print-interactive,
   aside {
@@ -171,11 +175,26 @@
     box-shadow: none !important;
     break-inside: avoid;
   }
-  .max-h-\[520px\] {
+  /* Expand scrollable areas so no scrollbar track is printed */
+  .max-h-\[520px\],
+  [class*="overflow-y-auto"],
+  [class*="overflow-auto"],
+  [class*="overflow-y-scroll"] {
     max-height: none !important;
+    overflow: visible !important;
+  }
+  /* Hide any residual scrollbar rendering */
+  *::-webkit-scrollbar {
+    display: none !important;
+    width: 0 !important;
+    height: 0 !important;
+  }
+  * {
+    scrollbar-width: none !important;
   }
   header {
     position: static !important;
   }
 }
+
 

@@ -97,7 +97,7 @@ export function BlickWerkSidebar({ activeLine }: { activeLine: Line }) {
   return (
     <TooltipProvider delayDuration={200}>
       <aside
-        className={`hidden md:flex shrink-0 flex-col bg-sidebar text-sidebar-foreground transition-[width] duration-200 ease-out no-print ${width}`}
+        className={`hidden md:flex shrink-0 flex-col bg-sidebar text-sidebar-foreground transition-[width] duration-200 ease-out no-print sticky top-0 h-screen self-start ${width}`}
       >
         <div
           className={`border-b border-sidebar-border ${

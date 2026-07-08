@@ -1,7 +1,6 @@
 import { useMemo, useState } from "react";
 import type { ProcessEvent, EventCategory, Severity } from "@/lib/mock-data";
 import { CATEGORY_LABELS } from "@/lib/mock-data";
-import { EventDetailDialog } from "./event-detail-dialog";
 
 const CATEGORY_COLOR: Record<EventCategory, string> = {
   Fehlgriff: "bg-chart-2/10 text-chart-2 border-chart-2/30",

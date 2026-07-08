@@ -8,7 +8,6 @@ import {
   Save,
   Trash2,
   Printer,
-  ArrowRight,
 } from "lucide-react";
 import { toast } from "sonner";
 import { BlickWerkSidebar } from "@/components/blickwerk/sidebar";
@@ -39,6 +38,7 @@ import {
   getLine,
 } from "@/lib/runs-store";
 import { useT } from "@/lib/i18n";
+import { VdiFlowDiagram } from "@/components/blickwerk/vdi-flow";
 
 interface IndexSearch {
   line?: string;
@@ -75,9 +75,6 @@ function formatDurationShort(sec: number) {
   return `${m}:${s.toString().padStart(2, "0")} min`;
 }
 
-function fmtSec(v: number) {
-  return v.toFixed(1).replace(".", ",");
-}
 
 function Dashboard() {
   const t = useT();
@@ -132,7 +129,11 @@ function Dashboard() {
   const videoDuration = draft?.video.durationSec ?? activeSz?.video?.durationSec ?? 0;
 
   const playerRef = useRef<SzenarioVideoHandle>(null);
+  const [selectedEvent, setSelectedEvent] = useState<ProcessEvent | null>(null);
+
   const handleEventClick = (e: ProcessEvent) => {
+    // Toggle: same event clicked again → collapse
+    setSelectedEvent((prev) => (prev?.id === e.id ? null : e));
     if (videoSrc && e.video_timestamp_start !== undefined) {
       playerRef.current?.seekTo(e);
     }
@@ -245,31 +246,17 @@ function Dashboard() {
                 Gemessene Zeitspanne je Prozessschritt aus dem aktiven Szenario
               </p>
             </div>
-            <div className="flex items-stretch gap-2 overflow-x-auto pb-1">
-              {stepTimes.map((s, i) => (
-                <div key={s.step} className="flex items-center gap-2 flex-1 min-w-[140px]">
-                  <div className="flex-1 rounded-2xl border border-border bg-background px-4 py-3 text-center">
-                    <div className="text-[10px] uppercase tracking-wider text-muted-foreground">
-                      Schritt {i + 1}
-                    </div>
-                    <div className="text-sm font-semibold text-foreground mt-0.5">
-                      {s.step}
-                    </div>
-                    <div className="text-xs tabular-nums text-muted-foreground mt-1">
-                      {fmtSec(s.minSec)}–{fmtSec(s.maxSec)} s
-                    </div>
-                  </div>
-                  {i < stepTimes.length - 1 && (
-                    <ArrowRight className="h-4 w-4 text-muted-foreground shrink-0" />
-                  )}
-                </div>
-              ))}
-            </div>
+            <VdiFlowDiagram stepTimes={stepTimes} />
           </section>
 
           {/* 2. Chart + video side by side */}
           <section className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-            <CycleTimeChart cycles={cycles} onCycleClick={videoSrc ? handleCycleClick : undefined} />
+            <CycleTimeChart
+              cycles={cycles}
+              onCycleClick={videoSrc ? handleCycleClick : undefined}
+              selectedEvent={selectedEvent}
+              onCloseSelected={() => setSelectedEvent(null)}
+            />
             <div className="rounded-xl bg-card border border-border shadow-[var(--shadow-card)] p-5">
               <div className="mb-3">
                 <h3 className="text-sm font-semibold text-foreground">
@@ -291,7 +278,11 @@ function Dashboard() {
           {/* 3. Event feed + KPI 2x2 grid */}
           <section className="grid grid-cols-1 lg:grid-cols-3 gap-4">
             <div className="lg:col-span-2">
-              <EventFeed events={events} onEventClick={handleEventClick} />
+              <EventFeed
+                events={events}
+                onEventClick={handleEventClick}
+                selectedEventId={selectedEvent?.id ?? null}
+              />
             </div>
             <div className="grid grid-cols-2 gap-3 content-start">
               <KpiTile

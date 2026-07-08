@@ -9,19 +9,41 @@ import {
   Tooltip,
   ReferenceLine,
 } from "recharts";
-import type { Cycle } from "@/lib/mock-data";
-import { median } from "@/lib/mock-data";
+import type { Cycle, ProcessEvent } from "@/lib/mock-data";
+import { median, CATEGORY_LABELS, CLUSTER_LABELS } from "@/lib/mock-data";
 
 interface Props {
   cycles: Cycle[];
   onCycleClick?: (videoTimestampStart: number) => void;
+  selectedEvent?: ProcessEvent | null;
+  onCloseSelected?: () => void;
 }
 
-export function CycleTimeChart({ cycles, onCycleClick }: Props) {
+const SEVERITY_LABEL: Record<ProcessEvent["severity"], string> = {
+  low: "Niedrig",
+  medium: "Mittel",
+  high: "Hoch",
+};
+
+function fmtTime(ts: number) {
+  return new Date(ts).toLocaleTimeString("de-DE", {
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+  });
+}
+
+export function CycleTimeChart({
+  cycles,
+  onCycleClick,
+  selectedEvent,
+  onCloseSelected,
+}: Props) {
   const med = median(cycles.map((c) => c.duration_sec));
   const threshold = med * 1.5;
 
-  const data = cycles.map((c, i) => ({
+  const sortedCycles = [...cycles].sort((a, b) => a.start_ts - b.start_ts);
+  const data = sortedCycles.map((c, i) => ({
     idx: i + 1,
     time: new Date(c.start_ts).toLocaleTimeString("de-DE", {
       hour: "2-digit",
@@ -30,9 +52,17 @@ export function CycleTimeChart({ cycles, onCycleClick }: Props) {
     duration: c.duration_sec,
     outlier: c.duration_sec > threshold ? c.duration_sec : null,
     vStart: c.video_timestamp_start,
+    cycleId: c.id,
   }));
 
   const outliers = data.filter((d) => d.outlier != null).length;
+
+  // Map selected event → cycle index for a vertical marker on the chart
+  let markerIdx: number | null = null;
+  if (selectedEvent) {
+    const idx = sortedCycles.findIndex((c) => c.id === selectedEvent.cycle_id);
+    if (idx >= 0) markerIdx = idx + 1;
+  }
 
   const handleClick = (state: unknown) => {
     if (!onCycleClick) return;
@@ -101,6 +131,19 @@ export function CycleTimeChart({ cycles, onCycleClick }: Props) {
                 position: "insideTopRight",
               }}
             />
+            {markerIdx !== null && (
+              <ReferenceLine
+                x={markerIdx}
+                stroke="var(--primary)"
+                strokeWidth={2}
+                label={{
+                  value: "Ereignis",
+                  fill: "var(--primary)",
+                  fontSize: 10,
+                  position: "top",
+                }}
+              />
+            )}
             <Line
               type="monotone"
               dataKey="duration"
@@ -113,6 +156,67 @@ export function CycleTimeChart({ cycles, onCycleClick }: Props) {
           </ComposedChart>
         </ResponsiveContainer>
       </div>
+
+      {selectedEvent && (
+        <div className="mt-4 border-t border-border pt-4">
+          <div className="flex items-start justify-between gap-3 mb-2">
+            <div className="min-w-0">
+              <div className="text-sm font-semibold text-foreground">
+                {CATEGORY_LABELS[selectedEvent.category]}
+              </div>
+              <div className="text-[11px] text-muted-foreground tabular-nums mt-0.5">
+                {fmtTime(selectedEvent.timestamp)}
+                {selectedEvent.video_timestamp_start !== undefined && (
+                  <>
+                    {" · Video "}
+                    {selectedEvent.video_timestamp_start.toFixed(1)}s
+                    {selectedEvent.video_timestamp_end !== undefined
+                      ? `–${selectedEvent.video_timestamp_end.toFixed(1)}s`
+                      : ""}
+                  </>
+                )}
+                {" · Zyklus "}
+                {selectedEvent.cycle_id}
+              </div>
+            </div>
+            <button
+              onClick={onCloseSelected}
+              className="text-[11px] text-muted-foreground hover:text-foreground underline shrink-0"
+            >
+              Schließen
+            </button>
+          </div>
+          <div className="grid grid-cols-3 gap-3 mb-3">
+            <div>
+              <div className="text-[10px] uppercase tracking-wider text-muted-foreground">
+                Schweregrad
+              </div>
+              <div className="text-sm font-medium mt-0.5">
+                {SEVERITY_LABEL[selectedEvent.severity]}
+              </div>
+            </div>
+            <div>
+              <div className="text-[10px] uppercase tracking-wider text-muted-foreground">
+                Konfidenz
+              </div>
+              <div className="text-sm font-medium mt-0.5 tabular-nums">
+                {(selectedEvent.confidence * 100).toFixed(0)}%
+              </div>
+            </div>
+            <div>
+              <div className="text-[10px] uppercase tracking-wider text-muted-foreground">
+                Quelle
+              </div>
+              <div className="text-sm font-medium mt-0.5 truncate">
+                {CLUSTER_LABELS[selectedEvent.cluster_source]}
+              </div>
+            </div>
+          </div>
+          <p className="text-sm text-foreground leading-relaxed">
+            {selectedEvent.description}
+          </p>
+        </div>
+      )}
     </div>
   );
 }

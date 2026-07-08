@@ -1,7 +1,6 @@
 import { useMemo, useState } from "react";
 import type { ProcessEvent, EventCategory, Severity } from "@/lib/mock-data";
 import { CATEGORY_LABELS } from "@/lib/mock-data";
-import { EventDetailDialog } from "./event-detail-dialog";
 
 const CATEGORY_COLOR: Record<EventCategory, string> = {
   Fehlgriff: "bg-chart-2/10 text-chart-2 border-chart-2/30",
@@ -36,11 +35,11 @@ function formatTime(ts: number) {
 interface Props {
   events: ProcessEvent[];
   onEventClick?: (e: ProcessEvent) => void;
+  selectedEventId?: string | null;
 }
 
-export function EventFeed({ events, onEventClick }: Props) {
+export function EventFeed({ events, onEventClick, selectedEventId }: Props) {
   const [active, setActive] = useState<Set<EventCategory>>(new Set());
-  const [selected, setSelected] = useState<ProcessEvent | null>(null);
 
   const counts = useMemo(() => {
     const c: Record<EventCategory, number> = {
@@ -72,7 +71,6 @@ export function EventFeed({ events, onEventClick }: Props) {
 
   const handleRowClick = (e: ProcessEvent) => {
     onEventClick?.(e);
-    setSelected(e);
   };
 
   return (
@@ -138,45 +136,48 @@ export function EventFeed({ events, onEventClick }: Props) {
           </div>
         ) : (
           <ul className="divide-y divide-border">
-            {filtered.map((e) => (
-              <li key={e.id}>
-                <button
-                  onClick={() => handleRowClick(e)}
-                  className="w-full text-left px-5 py-3 hover:bg-muted/50 transition-colors"
-                >
-                  <div className="flex items-start gap-3">
-                    <div className="text-[11px] tabular-nums text-muted-foreground w-16 pt-0.5">
-                      {formatTime(e.timestamp)}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 mb-1 flex-wrap">
-                        <span
-                          className={`px-1.5 py-0.5 rounded text-[10px] font-medium border ${CATEGORY_COLOR[e.category]}`}
-                        >
-                          {CATEGORY_LABELS[e.category]}
-                        </span>
-                        <span
-                          className={`px-1.5 py-0.5 rounded text-[10px] font-medium ${SEVERITY_STYLES[e.severity].className}`}
-                        >
-                          {SEVERITY_STYLES[e.severity].label}
-                        </span>
-                        {e.human_checkpoint_required && (
-                          <span className="px-1.5 py-0.5 rounded text-[10px] font-medium bg-warning/15 text-warning-foreground border border-warning/50">
-                            Rückfrage nötig
-                          </span>
-                        )}
+            {filtered.map((e) => {
+              const isSelected = selectedEventId === e.id;
+              return (
+                <li key={e.id}>
+                  <button
+                    onClick={() => handleRowClick(e)}
+                    className={`w-full text-left px-5 py-3 transition-colors ${
+                      isSelected ? "bg-primary/10" : "hover:bg-muted/50"
+                    }`}
+                  >
+                    <div className="flex items-start gap-3">
+                      <div className="text-[11px] tabular-nums text-muted-foreground w-16 pt-0.5">
+                        {formatTime(e.timestamp)}
                       </div>
-                      <p className="text-sm text-foreground truncate">{e.description}</p>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 mb-1 flex-wrap">
+                          <span
+                            className={`px-1.5 py-0.5 rounded text-[10px] font-medium border ${CATEGORY_COLOR[e.category]}`}
+                          >
+                            {CATEGORY_LABELS[e.category]}
+                          </span>
+                          <span
+                            className={`px-1.5 py-0.5 rounded text-[10px] font-medium ${SEVERITY_STYLES[e.severity].className}`}
+                          >
+                            {SEVERITY_STYLES[e.severity].label}
+                          </span>
+                          {e.human_checkpoint_required && (
+                            <span className="px-1.5 py-0.5 rounded text-[10px] font-medium bg-warning/15 text-warning-foreground border border-warning/50">
+                              Rückfrage nötig
+                            </span>
+                          )}
+                        </div>
+                        <p className="text-sm text-foreground truncate">{e.description}</p>
+                      </div>
                     </div>
-                  </div>
-                </button>
-              </li>
-            ))}
+                  </button>
+                </li>
+              );
+            })}
           </ul>
         )}
       </div>
-
-      <EventDetailDialog event={selected} onClose={() => setSelected(null)} />
     </div>
   );
 }

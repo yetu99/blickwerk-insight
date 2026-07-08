@@ -15,15 +15,16 @@ function fmt(sec?: number) {
 
 export function EventDetailsPanel({ event }: { event: ProcessEvent | null }) {
   return (
-    <div className="rounded-xl bg-card border border-border shadow-[var(--shadow-card)] p-4">
-      <div className="mb-3">
-        <h3 className="text-sm font-semibold text-foreground">Event-Details</h3>
-        <p className="text-[11px] text-muted-foreground mt-0.5">
+    <div className="rounded-xl bg-card border border-border shadow-[var(--shadow-card)] p-5 flex flex-col h-full">
+      <div className="mb-4">
+        <h3 className="text-lg font-semibold text-foreground">Event-Details</h3>
+        <p className="text-xs text-muted-foreground mt-1">
           {event
             ? "Detailinfos zum ausgewählten Ereignis"
             : "Wähle einen Timeline-Punkt oder eine Zeile im Ereignis-Feed"}
         </p>
       </div>
+
       {!event ? (
         <div className="rounded-md border border-dashed border-border bg-muted/40 py-8 text-center text-xs text-muted-foreground">
           Event auswählen

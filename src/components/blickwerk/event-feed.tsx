@@ -18,13 +18,21 @@ const SEVERITY_STYLES: Record<Severity, { label: string; className: string }> = 
   high: { label: "Hoch", className: "bg-destructive/10 text-destructive border border-destructive/30" },
 };
 
-function formatTime(ts: number) {
-  return new Date(ts).toLocaleTimeString("de-DE", {
-    hour: "2-digit",
-    minute: "2-digit",
-    second: "2-digit",
-  });
+function fmtSec(sec?: number) {
+  if (sec === undefined || !Number.isFinite(sec)) return "–";
+  const m = Math.floor(sec / 60);
+  const s = Math.floor(sec % 60);
+  return `${m}:${s.toString().padStart(2, "0")}`;
 }
+
+const LEGACY_CATEGORIES: string[] = [
+  "Fehlgriff",
+  "Farbverwechslung",
+  "Taktzeitüberschreitung",
+  "Zögern",
+  "Prozessunterbrechung",
+];
+
 
 interface Props {
   events: ProcessEvent[];
@@ -110,6 +118,23 @@ export function EventFeed({ events, onEventClick, selectedEventId }: Props) {
               </button>
             );
           })}
+          {LEGACY_CATEGORIES.map((name) => (
+            <div
+              key={name}
+              className="flex items-center gap-2 opacity-40 cursor-not-allowed"
+              title="Keine Vorkommen im aktuellen Beispiel"
+            >
+              <span className="text-[11px] font-medium px-2 py-0.5 rounded-md border border-border bg-muted text-muted-foreground">
+                {name}
+              </span>
+              <span className="flex items-center gap-1.5">
+                <span className="relative h-1.5 w-16 rounded-full bg-muted overflow-hidden" />
+                <span className="text-[11px] tabular-nums text-muted-foreground w-5 text-right">
+                  0
+                </span>
+              </span>
+            </div>
+          ))}
           {active.size > 0 && (
             <button
               onClick={() => setActive(new Set())}
@@ -120,6 +145,7 @@ export function EventFeed({ events, onEventClick, selectedEventId }: Props) {
           )}
         </div>
       </div>
+
 
       <div className="flex-1 overflow-y-auto max-h-[520px]">
         {filtered.length === 0 ? (
@@ -139,9 +165,10 @@ export function EventFeed({ events, onEventClick, selectedEventId }: Props) {
                     }`}
                   >
                     <div className="flex items-start gap-3">
-                      <div className="text-[11px] tabular-nums text-muted-foreground w-16 pt-0.5">
-                        {formatTime(e.timestamp)}
+                      <div className="text-[11px] tabular-nums text-muted-foreground w-20 pt-0.5 shrink-0">
+                        {fmtSec(e.video_timestamp_start)}–{fmtSec(e.video_timestamp_end)}
                       </div>
+
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 mb-1 flex-wrap">
                           <span

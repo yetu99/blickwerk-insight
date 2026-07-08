@@ -78,6 +78,15 @@ export const SzenarioVideoPlayer = forwardRef<SzenarioVideoHandle, Props>(
             setHighlight(null);
           }, 3200);
         },
+        seekToTime: (seconds: number) => {
+          const v = videoRef.current;
+          if (v && Number.isFinite(seconds)) {
+            try {
+              v.currentTime = seconds;
+            } catch { /* noop */ }
+            setCurrent(seconds);
+          }
+        },
       }),
       [duration, videoDuration],
     );

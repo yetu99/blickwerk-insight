@@ -20,7 +20,7 @@ const DE: Dict = {
   "page.ereignisse.subtitle": "Linien-übergreifende Fehleranalyse",
   "page.ereignisse.ranking": "Fehleranfälligkeit nach Linie & Prozessschritt",
   "page.ereignisse.patterns": "Linienübergreifende Muster",
-  "page.automatisierungen.title": "Automatisierungen",
+  "page.automatisierungen.title": "Automatisierung",
   "page.automatisierungen.currentState": "Prozess-Ist-Zustand",
   "page.automatisierungen.simulate": "Digitalen Zwilling simulieren",
   "page.automatisierungen.disclaimer":

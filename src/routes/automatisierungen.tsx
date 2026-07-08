@@ -14,7 +14,7 @@ import {
 import { BlickWerkSidebar } from "@/components/blickwerk/sidebar";
 import { LINES } from "@/lib/mock-data";
 import { useAllLines } from "@/lib/runs-store";
-import digitalTwinAsset from "@/assets/digital-twin.jpg.asset.json";
+import digitalTwinAsset from "@/assets/fabrikhalle.png.asset.json";
 
 export const Route = createFileRoute("/automatisierungen")({
   validateSearch: (s: Record<string, unknown>) => ({

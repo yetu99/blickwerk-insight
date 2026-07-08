@@ -255,14 +255,7 @@ function generateLine(line: Line, cfg: LineConfig): Seed {
     cycles.push(cycle);
 
     if (isError) {
-      let category: EventCategory;
-      if (duration > cfg.baseDuration + cfg.jitter) {
-        category = "Taktzeitueberschreitung";
-      } else if (rand() < cfg.dominantWeight) {
-        category = cfg.dominantCategory;
-      } else {
-        category = CATEGORIES[Math.floor(rand() * CATEGORIES.length)];
-      }
+      const category: EventCategory = "Fehler";
       const sevs = SEVERITY_BY_CATEGORY[category];
       const severity = sevs[Math.floor(rand() * sevs.length)];
       const descs = CATEGORY_DESCRIPTIONS[category];
@@ -431,12 +424,7 @@ export function generateRun(lineId: string, videoDurationSec: number): Seed {
     cycles.push(cycle);
 
     if (isError) {
-      let category: EventCategory;
-      if (actualDur > 5.5) {
-        category = "Taktzeitueberschreitung";
-      } else {
-        category = CATEGORIES[Math.floor(Math.random() * CATEGORIES.length)];
-      }
+      const category: EventCategory = "Fehler";
       const sevs = SEVERITY_BY_CATEGORY[category];
       const severity = sevs[Math.floor(Math.random() * sevs.length)];
       const descs = CATEGORY_DESCRIPTIONS[category];

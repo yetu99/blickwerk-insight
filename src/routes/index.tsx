@@ -12,6 +12,7 @@ import {
 import { toast } from "sonner";
 import { BlickWerkSidebar } from "@/components/blickwerk/sidebar";
 import { KpiTile } from "@/components/blickwerk/kpi-tile";
+import { EventDetailsPanel } from "@/components/blickwerk/event-details-panel";
 import { EventFeed } from "@/components/blickwerk/event-feed";
 import {
   SzenarioVideoPlayer,

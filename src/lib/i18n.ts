@@ -7,7 +7,7 @@ const DE: Dict = {
   "nav.uebersicht": "Übersicht",
   "nav.linien": "Linien",
   "nav.ereignisse": "Werkhalle",
-  "nav.automatisierungen": "Automatisierungen",
+  "nav.automatisierungen": "Automatisierung",
   "nav.einstellungen": "Einstellungen",
   "sidebar.activeLine": "Aktive Linie",
   "sidebar.liveActive": "Live-Analyse aktiv",

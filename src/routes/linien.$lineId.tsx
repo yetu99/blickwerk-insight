@@ -94,40 +94,19 @@ interface Suggestion {
 }
 
 const SUGGESTION_TEMPLATES: Record<EventCategory, Omit<Suggestion, "id" | "impact" | "category">> = {
-  Farbverwechslung: {
-    title: "Farbklassifikator vor Greifer nachschalten",
+  Fehler: {
+    title: "Vision-Feedback zur Orientierungsprüfung ergänzen",
     detail:
-      "RGB-Sensor an Position vor dem Greifarm ergänzt die Kamera und blockt falsche Farbchargen, bevor sie in den Kasten wandern.",
+      "Zusätzliche Kamera prüft die Orientierung des Bauteils vor der Ablage. Falsch orientierte Teile werden vor der Übergabe automatisch neu ausgerichtet.",
     effort: "mittel",
     automatable: true,
   },
-  Fehlgriff: {
-    title: "Greiferposition per Vision-Feedback nachregeln",
+  Neutral: {
+    title: "Taktzeit an Referenzschritten protokollieren",
     detail:
-      "Live-Positionskorrektur (±2 mm) vor jedem Greifzyklus reduziert Fehlpositionierungen und Zweitversuche deutlich.",
-    effort: "mittel",
-    automatable: true,
-  },
-  Taktzeitueberschreitung: {
-    title: "Puffer vor Kontrollstation vergrößern",
-    detail:
-      "Zusätzlicher Pufferplatz (2 Slots) entkoppelt Taktschwankungen der Kontrollstation von der Linie stromaufwärts.",
+      "Feste Referenzpunkte im Zyklus loggen, um Schwankungen zwischen normal ablaufenden Schritten sichtbar zu machen.",
     effort: "gering",
     automatable: false,
-  },
-  Zoegern: {
-    title: "Anzeige-Layout am Bedienplatz umstellen",
-    detail:
-      "Kritische KPIs direkt in Blickachse (statt seitlicher Monitor) — verkürzt Blickwechselzeit und eliminiert das Zögern-Muster.",
-    effort: "gering",
-    automatable: false,
-  },
-  Prozessunterbrechung: {
-    title: "Automatischer Wiederanlauf nach Kurzstopp",
-    detail:
-      "SPS-Routine erkennt Kurzstopps <30 s und fährt die Station selbstständig wieder an, sofern keine Sicherheitsverriegelung aktiv ist.",
-    effort: "hoch",
-    automatable: true,
   },
 };
 
@@ -146,11 +125,8 @@ function suggestionsFrom(stats: CategoryStat[]): Suggestion[] {
 }
 
 const CATEGORY_COLOR: Record<EventCategory, string> = {
-  Fehlgriff: "var(--chart-2)",
-  Farbverwechslung: "var(--chart-4)",
-  Taktzeitueberschreitung: "var(--chart-3)",
-  Zoegern: "var(--chart-1)",
-  Prozessunterbrechung: "var(--chart-5)",
+  Neutral: "#14B8A6",
+  Fehler: "#DC2626",
 };
 
 function LineDetail() {

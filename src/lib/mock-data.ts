@@ -1,9 +1,4 @@
-export type EventCategory =
-  | "Fehlgriff"
-  | "Farbverwechslung"
-  | "Taktzeitueberschreitung"
-  | "Zoegern"
-  | "Prozessunterbrechung";
+export type EventCategory = "Neutral" | "Fehler";
 
 export type Severity = "low" | "medium" | "high";
 
@@ -35,11 +30,8 @@ export type ClusterSource =
   | "tracker";
 
 export const CATEGORY_TO_CLUSTER: Record<EventCategory, ClusterSource> = {
-  Fehlgriff: "timwoods_motion",
-  Farbverwechslung: "timwoods_defects",
-  Taktzeitueberschreitung: "tracker",
-  Zoegern: "timwoods_skills",
-  Prozessunterbrechung: "waiting",
+  Neutral: "tracker",
+  Fehler: "timwoods_defects",
 };
 
 export const CLUSTER_LABELS: Record<ClusterSource, string> = {
@@ -58,6 +50,7 @@ export interface ProcessEvent {
   category: EventCategory;
   severity: Severity;
   timestamp: number;
+  title?: string;
   description: string;
   video_clip_url: string | null;
   cluster_source: ClusterSource;
@@ -70,21 +63,15 @@ export interface ProcessEvent {
 
 
 export const CATEGORY_LABELS: Record<EventCategory, string> = {
-  Fehlgriff: "Fehlgriff",
-  Farbverwechslung: "Farbverwechslung",
-  Taktzeitueberschreitung: "Taktzeitüberschreitung",
-  Zoegern: "Zögern",
-  Prozessunterbrechung: "Prozessunterbrechung",
+  Neutral: "Neutral",
+  Fehler: "Fehler",
 };
 
 export type ProcessStep = "Pick" | "Place" | "Kontrolle" | "Korrektur";
 
 export const CATEGORY_TO_STEP: Record<EventCategory, ProcessStep> = {
-  Fehlgriff: "Pick",
-  Zoegern: "Pick",
-  Taktzeitueberschreitung: "Place",
-  Farbverwechslung: "Kontrolle",
-  Prozessunterbrechung: "Korrektur",
+  Neutral: "Place",
+  Fehler: "Kontrolle",
 };
 
 export const PROCESS_STEPS: ProcessStep[] = ["Pick", "Place", "Kontrolle", "Korrektur"];
@@ -128,39 +115,21 @@ export function computeStepTimes(cycles: Cycle[]): StepTimeInfo[] {
 }
 
 const CATEGORY_DESCRIPTIONS: Record<EventCategory, string[]> = {
-  Fehlgriff: [
-    "Bauteil fiel beim Aufnehmen aus dem Greifer.",
-    "Greifer erfasste Teil seitlich, Position korrigiert.",
-    "Zweiter Griffversuch nach Fehlpositionierung nötig.",
+  Neutral: [
+    "Bauteil regulär platziert.",
+    "Aufnahme und Ablage ohne Auffälligkeit.",
+    "Schritt ordnungsgemäß abgeschlossen.",
   ],
-  Farbverwechslung: [
-    "Grüne Flasche im Fach für Braunglas erkannt.",
-    "Braune Flasche im Weißglas-Kasten platziert.",
-    "Sortierabweichung: falsche Farbzuordnung Position 4.",
-  ],
-  Taktzeitueberschreitung: [
-    "Zyklus überschritt Zielzeit deutlich.",
-    "Verlängerte Dauer durch Nachjustierung.",
-    "Taktzeit über Schwellwert – Ursache unklar.",
-  ],
-  Zoegern: [
-    "Bediener verharrte 3.2 s vor Übergabe.",
-    "Unterbrechung im Bewegungsablauf am Übergabepunkt.",
-    "Zögern erkannt: Blick zur Anzeige während des Griffs.",
-  ],
-  Prozessunterbrechung: [
-    "Förderband für 12 s ohne erkennbare Ursache gestoppt.",
-    "Bediener verließ Sichtfeld während laufender Sortierung.",
-    "Manueller Eingriff am Bandantrieb erforderlich.",
+  Fehler: [
+    "Bauteil in falscher Orientierung platziert.",
+    "Fehlgriff beim Aufnehmen, Korrektur nötig.",
+    "Position weicht vom Zielrahmen ab.",
   ],
 };
 
 const SEVERITY_BY_CATEGORY: Record<EventCategory, Severity[]> = {
-  Fehlgriff: ["medium", "high"],
-  Farbverwechslung: ["high", "high", "medium"],
-  Taktzeitueberschreitung: ["low", "medium"],
-  Zoegern: ["low", "low", "medium"],
-  Prozessunterbrechung: ["high", "medium"],
+  Neutral: ["low"],
+  Fehler: ["medium", "high"],
 };
 
 function mulberry32(seed: number) {
@@ -212,7 +181,7 @@ const LINE_CONFIG: Record<string, LineConfig> = {
     baseDuration: 4,
     jitter: 2,
     errorRate: 0.15,
-    dominantCategory: "Farbverwechslung",
+    dominantCategory: "Fehler",
     dominantWeight: 0.45,
     cycleCount: 200,
   },
@@ -221,7 +190,7 @@ const LINE_CONFIG: Record<string, LineConfig> = {
     baseDuration: 11,
     jitter: 4,
     errorRate: 0.09,
-    dominantCategory: "Fehlgriff",
+    dominantCategory: "Fehler",
     dominantWeight: 0.55,
     cycleCount: 90,
   },
@@ -230,7 +199,7 @@ const LINE_CONFIG: Record<string, LineConfig> = {
     baseDuration: 7,
     jitter: 3,
     errorRate: 0.22,
-    dominantCategory: "Zoegern",
+    dominantCategory: "Fehler",
     dominantWeight: 0.5,
     cycleCount: 140,
   },
@@ -243,13 +212,7 @@ export interface Seed {
 }
 
 
-const CATEGORIES: EventCategory[] = [
-  "Fehlgriff",
-  "Farbverwechslung",
-  "Taktzeitueberschreitung",
-  "Zoegern",
-  "Prozessunterbrechung",
-];
+const CATEGORIES: EventCategory[] = ["Neutral", "Fehler"];
 
 function generateLine(line: Line, cfg: LineConfig): Seed {
   const rand = mulberry32(cfg.seed);
@@ -292,14 +255,7 @@ function generateLine(line: Line, cfg: LineConfig): Seed {
     cycles.push(cycle);
 
     if (isError) {
-      let category: EventCategory;
-      if (duration > cfg.baseDuration + cfg.jitter) {
-        category = "Taktzeitueberschreitung";
-      } else if (rand() < cfg.dominantWeight) {
-        category = cfg.dominantCategory;
-      } else {
-        category = CATEGORIES[Math.floor(rand() * CATEGORIES.length)];
-      }
+      const category: EventCategory = "Fehler";
       const sevs = SEVERITY_BY_CATEGORY[category];
       const severity = sevs[Math.floor(rand() * sevs.length)];
       const descs = CATEGORY_DESCRIPTIONS[category];
@@ -332,8 +288,94 @@ function generateLine(line: Line, cfg: LineConfig): Seed {
 
 }
 
+interface HardcodedEvent {
+  start: number; // video seconds
+  end: number;
+  category: EventCategory;
+  title: string;
+  description: string;
+}
+
+const DEMO_EVENTS: HardcodedEvent[] = [
+  {
+    start: 0,
+    end: 3,
+    category: "Neutral",
+    title: "Gehäuse platziert",
+    description:
+      "Schwarzes Gehäuse aufgenommen und im Arbeitsbereich platziert.",
+  },
+  {
+    start: 3,
+    end: 7,
+    category: "Neutral",
+    title: "Zahnrad gelb platziert",
+    description:
+      "Gelbes Zahnrad aufgenommen und in korrekter Orientierung ins Gehäuse platziert.",
+  },
+  {
+    start: 7,
+    end: 11,
+    category: "Neutral",
+    title: "Zahnrad weiß platziert",
+    description:
+      "Weißes Zahnrad aufgenommen und ins Gehäuse platziert.",
+  },
+  {
+    start: 11,
+    end: 16,
+    category: "Fehler",
+    title: "Falsche Orientierung",
+    description:
+      "Weißes Zahnrad wurde in falscher Orientierung platziert, Korrekturschritt zur Neuausrichtung erforderlich.",
+  },
+  {
+    start: 16,
+    end: 19,
+    category: "Neutral",
+    title: "Getriebe abgelegt",
+    description:
+      "Fertig montiertes Getriebe wird ins Lager platziert und abgelegt.",
+  },
+];
+
+function buildDemoSeed(line: Line): Seed {
+  const wallEnd = Date.now();
+  const wallStart = wallEnd - 19_000;
+  const cycles: Cycle[] = DEMO_EVENTS.map((e, i) => ({
+    id: `${line.id}-demo-c-${i + 1}`,
+    line_id: line.id,
+    start_ts: wallStart + e.start * 1000,
+    end_ts: wallStart + e.end * 1000,
+    duration_sec: Math.round((e.end - e.start) * 100) / 100,
+    status: e.category === "Fehler" ? "error" : "ok",
+    video_timestamp_start: e.start,
+    video_timestamp_end: e.end,
+  }));
+  const events: ProcessEvent[] = DEMO_EVENTS.map((e, i) => ({
+    id: `${line.id}-demo-e-${i + 1}`,
+    line_id: line.id,
+    cycle_id: cycles[i].id,
+    category: e.category,
+    severity: e.category === "Fehler" ? "high" : "low",
+    timestamp: wallStart + e.start * 1000,
+    title: e.title,
+    description: e.description,
+    video_clip_url: null,
+    cluster_source: CATEGORY_TO_CLUSTER[e.category],
+    confidence: 0.92,
+    human_checkpoint_required: false,
+    video_timestamp_start: e.start,
+    video_timestamp_end: e.end,
+  }));
+  return { line, cycles, events };
+}
+
 export const SEEDS: Record<string, Seed> = Object.fromEntries(
-  LINES.map((l) => [l.id, generateLine(l, LINE_CONFIG[l.id])]),
+  LINES.map((l) => [
+    l.id,
+    l.id === "line-1" ? buildDemoSeed(l) : generateLine(l, LINE_CONFIG[l.id]),
+  ]),
 );
 
 // Legacy default export used by any single-line consumer.
@@ -468,12 +510,7 @@ export function generateRun(lineId: string, videoDurationSec: number): Seed {
     cycles.push(cycle);
 
     if (isError) {
-      let category: EventCategory;
-      if (actualDur > 5.5) {
-        category = "Taktzeitueberschreitung";
-      } else {
-        category = CATEGORIES[Math.floor(Math.random() * CATEGORIES.length)];
-      }
+      const category: EventCategory = "Fehler";
       const sevs = SEVERITY_BY_CATEGORY[category];
       const severity = sevs[Math.floor(Math.random() * sevs.length)];
       const descs = CATEGORY_DESCRIPTIONS[category];

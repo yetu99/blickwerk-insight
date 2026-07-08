@@ -12,6 +12,7 @@ import {
 import { toast } from "sonner";
 import { BlickWerkSidebar } from "@/components/blickwerk/sidebar";
 import { KpiTile } from "@/components/blickwerk/kpi-tile";
+import { EventDetailsPanel } from "@/components/blickwerk/event-details-panel";
 import { EventFeed } from "@/components/blickwerk/event-feed";
 import {
   SzenarioVideoPlayer,
@@ -130,13 +131,20 @@ function Dashboard() {
   const playerRef = useRef<SzenarioVideoHandle>(null);
   const [selectedEvent, setSelectedEvent] = useState<ProcessEvent | null>(null);
 
+  // Default: select first event so Event-Details is populated on load.
+  useEffect(() => {
+    if (!selectedEvent && events.length > 0) {
+      setSelectedEvent(events[0]);
+    }
+  }, [events, selectedEvent]);
+
   const handleEventClick = (e: ProcessEvent) => {
-    // Toggle: same event clicked again → collapse
-    setSelectedEvent((prev) => (prev?.id === e.id ? null : e));
+    setSelectedEvent(e);
     if (videoSrc && e.video_timestamp_start !== undefined) {
       playerRef.current?.seekTo(e);
     }
   };
+
 
 
   const handleSaveDraft = () => {
@@ -264,37 +272,41 @@ function Dashboard() {
                 events={events}
               />
             </div>
-            <div className="grid grid-cols-2 gap-3 content-start">
-              <KpiTile
-                label={t("kpi.throughput")}
-                value={kpis.throughput.toString()}
-                unit={t("kpi.throughputUnit")}
-                icon={Activity}
-                trend={{ direction: "up", value: "+4,2 %", positive: true }}
-              />
-              <KpiTile
-                label={t("kpi.avgCycle")}
-                value={kpis.avgCycle.toFixed(2).replace(".", ",")}
-                unit={t("kpi.cycleUnit")}
-                icon={Clock}
-                trend={{ direction: "down", value: "−0,3 s", positive: true }}
-              />
-              <KpiTile
-                label={t("kpi.errorRate")}
-                value={kpis.errorRate.toFixed(1).replace(".", ",")}
-                unit="%"
-                icon={AlertTriangle}
-                trend={{ direction: "up", value: "+1,8 %", positive: false }}
-              />
-              <KpiTile
-                label={t("kpi.downtime")}
-                value={kpis.downtimeMin.toFixed(1).replace(".", ",")}
-                unit={t("kpi.downtimeUnit")}
-                icon={PowerOff}
-                trend={{ direction: "down", value: "−2,1 min", positive: true }}
-              />
+            <div className="flex flex-col gap-3">
+              <div className="grid grid-cols-2 gap-3 content-start">
+                <KpiTile
+                  label={t("kpi.throughput")}
+                  value={kpis.throughput.toString()}
+                  unit={t("kpi.throughputUnit")}
+                  icon={Activity}
+                  trend={{ direction: "up", value: "+4,2 %", positive: true }}
+                />
+                <KpiTile
+                  label={t("kpi.avgCycle")}
+                  value={kpis.avgCycle.toFixed(2).replace(".", ",")}
+                  unit={t("kpi.cycleUnit")}
+                  icon={Clock}
+                  trend={{ direction: "down", value: "−0,3 s", positive: true }}
+                />
+                <KpiTile
+                  label={t("kpi.errorRate")}
+                  value={kpis.errorRate.toFixed(1).replace(".", ",")}
+                  unit="%"
+                  icon={AlertTriangle}
+                  trend={{ direction: "up", value: "+1,8 %", positive: false }}
+                />
+                <KpiTile
+                  label={t("kpi.downtime")}
+                  value={kpis.downtimeMin.toFixed(1).replace(".", ",")}
+                  unit={t("kpi.downtimeUnit")}
+                  icon={PowerOff}
+                  trend={{ direction: "down", value: "−2,1 min", positive: true }}
+                />
+              </div>
+              <EventDetailsPanel event={selectedEvent} />
             </div>
           </section>
+
 
           {/* 3. Event feed — full width */}
           <section>

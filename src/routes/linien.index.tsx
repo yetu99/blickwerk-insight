@@ -118,7 +118,18 @@ function LinienPage() {
                           <AlertTriangle className="h-3 w-3" />
                           Fehlerquote
                         </div>
-                        <div className="text-lg font-semibold tabular-nums text-foreground">
+                        <div
+                          className="text-lg font-semibold tabular-nums"
+                          style={{
+                            color: kpis
+                              ? kpis.errorRate >= 15
+                                ? "var(--destructive)"
+                                : kpis.errorRate >= 10
+                                  ? "var(--warning)"
+                                  : "var(--success)"
+                              : "var(--foreground)",
+                          }}
+                        >
                           {kpis ? kpis.errorRate.toFixed(1).replace(".", ",") : "—"}
                           <span className="text-[11px] font-normal text-muted-foreground ml-1">
                             %
@@ -126,6 +137,35 @@ function LinienPage() {
                         </div>
                       </div>
                     </div>
+
+                    {kpis && (
+                      <div className="mt-3">
+                        <div className="flex items-center justify-between text-[10px] text-muted-foreground mb-1">
+                          <span>Status</span>
+                          <span>
+                            {kpis.errorRate >= 15
+                              ? "Kritisch"
+                              : kpis.errorRate >= 10
+                                ? "Beobachten"
+                                : "Stabil"}
+                          </span>
+                        </div>
+                        <div className="h-1.5 w-full rounded-full bg-muted overflow-hidden">
+                          <div
+                            className="h-full rounded-full"
+                            style={{
+                              width: `${Math.min(100, kpis.errorRate * 4)}%`,
+                              backgroundColor:
+                                kpis.errorRate >= 15
+                                  ? "var(--destructive)"
+                                  : kpis.errorRate >= 10
+                                    ? "var(--warning)"
+                                    : "var(--success)",
+                            }}
+                          />
+                        </div>
+                      </div>
+                    )}
                   </Link>
                 </li>
               );
@@ -136,3 +176,4 @@ function LinienPage() {
     </div>
   );
 }
+

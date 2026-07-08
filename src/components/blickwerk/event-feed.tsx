@@ -1,6 +1,17 @@
 import { useMemo, useState } from "react";
 import type { ProcessEvent, EventCategory, Severity } from "@/lib/mock-data";
 import { CATEGORY_LABELS } from "@/lib/mock-data";
+import {
+  GearCheckIcon,
+  GearWarningIcon,
+  iconForEventTitle,
+} from "./event-icons";
+
+const CATEGORY_ICON: Record<EventCategory, (props: { size?: number }) => JSX.Element> = {
+  Neutral: GearCheckIcon,
+  Fehler: GearWarningIcon,
+};
+
 
 const CATEGORY_COLOR: Record<EventCategory, string> = {
   Neutral: "bg-[#14B8A6]/10 text-[#14B8A6] border-[#14B8A6]/40",
@@ -96,14 +107,19 @@ export function EventFeed({ events, onEventClick, selectedEventId }: Props) {
                 }`}
               >
                 <span
-                  className={`text-[11px] font-medium px-2 py-0.5 rounded-md border transition-colors ${
+                  className={`inline-flex items-center gap-1.5 text-[11px] font-medium px-2 py-0.5 rounded-md border transition-colors ${
                     isActive
                       ? "bg-primary text-primary-foreground border-primary"
                       : `${CATEGORY_COLOR[cat]} group-hover:border-primary/60`
                   }`}
                 >
+                  {(() => {
+                    const Icon = CATEGORY_ICON[cat];
+                    return <Icon size={14} />;
+                  })()}
                   {CATEGORY_LABELS[cat]}
                 </span>
+
                 <span className="flex items-center gap-1.5">
                   <span className="relative h-1.5 w-16 rounded-full bg-muted overflow-hidden">
                     <span
@@ -189,12 +205,25 @@ export function EventFeed({ events, onEventClick, selectedEventId }: Props) {
                         </div>
                         {e.title ? (
                           <>
-                            <p className="text-sm font-medium text-foreground truncate">{e.title}</p>
-                            <p className="text-xs text-muted-foreground truncate mt-0.5">{e.description}</p>
+                            <div className="flex items-center gap-2 min-w-0">
+                              {(() => {
+                                const Icon = iconForEventTitle(e.title);
+                                return Icon ? (
+                                  <Icon size={22} className="shrink-0" />
+                                ) : null;
+                              })()}
+                              <p className="text-sm font-medium text-foreground truncate">
+                                {e.title}
+                              </p>
+                            </div>
+                            <p className="text-xs text-muted-foreground truncate mt-0.5">
+                              {e.description}
+                            </p>
                           </>
                         ) : (
                           <p className="text-sm text-foreground truncate">{e.description}</p>
                         )}
+
                       </div>
                     </div>
                   </button>

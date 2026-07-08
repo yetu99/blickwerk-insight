@@ -75,9 +75,6 @@ function formatDurationShort(sec: number) {
   return `${m}:${s.toString().padStart(2, "0")} min`;
 }
 
-function fmtSec(v: number) {
-  return v.toFixed(1).replace(".", ",");
-}
 
 function Dashboard() {
   const t = useT();

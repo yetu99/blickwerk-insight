@@ -230,6 +230,45 @@ function AutomatisierungPage() {
             />
           </section>
 
+          {/* Simulations-Eingabe */}
+          <section className="rounded-xl border border-border bg-card p-5 shadow-[var(--shadow-card)]">
+            <h2 className="text-sm font-semibold text-foreground mb-1">
+              Eigene Optimierung simulieren
+            </h2>
+            <p className="text-[11px] text-muted-foreground mb-4">
+              Beschreibe eine konkrete Parameteränderung. Der Digital Twin
+              berechnet die Auswirkung auf DLZ und Waste.
+            </p>
+            <div className="flex flex-col md:flex-row gap-3 items-stretch">
+              <textarea
+                value={input}
+                onChange={(e) => setInput(e.target.value)}
+                disabled={isSimulating}
+                rows={3}
+                placeholder='z. B. „Erhöhe die Taktzahl an Station 3 um 10 %" oder „Reduziere die Rüstzeit der Verpackungsanlage"'
+                className="flex-1 min-w-0 resize-none rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground/70 focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary disabled:opacity-50"
+              />
+              <button
+                onClick={startSimulation}
+                disabled={!input.trim() || isSimulating}
+                className="shrink-0 inline-flex items-center justify-center gap-2 rounded-md px-6 py-3 text-base font-semibold text-white shadow-md transition-all disabled:opacity-40 disabled:cursor-not-allowed hover:shadow-lg hover:scale-[1.02]"
+                style={{ backgroundColor: "#3BA4F5" }}
+              >
+                {isSimulating ? (
+                  <>
+                    <Loader2 className="h-5 w-5 animate-spin" />
+                    Simuliert …
+                  </>
+                ) : (
+                  <>
+                    <Sparkles className="h-5 w-5" />
+                    Simulieren
+                  </>
+                )}
+              </button>
+            </div>
+          </section>
+
           {/* Digital-Twin-Visualisierung */}
           <section className="rounded-xl border border-border bg-card shadow-[var(--shadow-card)] overflow-hidden">
             <div className="flex items-center justify-between px-5 py-3 border-b border-border">
@@ -299,46 +338,6 @@ function AutomatisierungPage() {
               </div>
             </div>
           </section>
-
-          {/* Simulations-Eingabe */}
-          <section className="rounded-xl border border-border bg-card p-5 shadow-[var(--shadow-card)]">
-            <h2 className="text-sm font-semibold text-foreground mb-1">
-              Eigene Optimierung simulieren
-            </h2>
-            <p className="text-[11px] text-muted-foreground mb-4">
-              Beschreibe eine konkrete Parameteränderung. Der Digital Twin
-              berechnet die Auswirkung auf DLZ und Waste.
-            </p>
-            <div className="flex flex-col md:flex-row gap-3 items-stretch">
-              <textarea
-                value={input}
-                onChange={(e) => setInput(e.target.value)}
-                disabled={isSimulating}
-                rows={3}
-                placeholder='z. B. „Erhöhe die Taktzahl an Station 3 um 10 %" oder „Reduziere die Rüstzeit der Verpackungsanlage"'
-                className="flex-1 min-w-0 resize-none rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground/70 focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary disabled:opacity-50"
-              />
-              <button
-                onClick={startSimulation}
-                disabled={!input.trim() || isSimulating}
-                className="shrink-0 inline-flex items-center justify-center gap-2 rounded-md px-6 py-3 text-base font-semibold text-white shadow-md transition-all disabled:opacity-40 disabled:cursor-not-allowed hover:shadow-lg hover:scale-[1.02]"
-                style={{ backgroundColor: "#3BA4F5" }}
-              >
-                {isSimulating ? (
-                  <>
-                    <Loader2 className="h-5 w-5 animate-spin" />
-                    Simuliert …
-                  </>
-                ) : (
-                  <>
-                    <Sparkles className="h-5 w-5" />
-                    Simulieren
-                  </>
-                )}
-              </button>
-            </div>
-          </section>
-
 
 
           {/* Simulationsergebnis */}

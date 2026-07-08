@@ -117,13 +117,11 @@ export function BlickWerkSidebar({ activeLine }: { activeLine: Line }) {
                 className="h-11 w-11 rounded-md bg-white p-1 shrink-0"
               />
               <div className="min-w-0 flex-1">
-                <div className="font-semibold tracking-tight text-lg leading-tight">
-                  symplify
-                </div>
-                <div className="italic text-[12px] leading-tight text-sidebar-foreground/70 truncate">
-                  Symplicity that scales
+                <div className="italic text-[13px] leading-tight text-sidebar-foreground/80 truncate">
+                  „Symplicity that scales“
                 </div>
               </div>
+
               {CollapseToggle}
             </div>
 

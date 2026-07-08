@@ -12,7 +12,6 @@ import {
 import { toast } from "sonner";
 import { BlickWerkSidebar } from "@/components/blickwerk/sidebar";
 import { KpiTile } from "@/components/blickwerk/kpi-tile";
-import { CycleTimeChart } from "@/components/blickwerk/cycle-time-chart";
 import { EventFeed } from "@/components/blickwerk/event-feed";
 import {
   SzenarioVideoPlayer,
@@ -138,9 +137,7 @@ function Dashboard() {
       playerRef.current?.seekTo(e);
     }
   };
-  const handleCycleClick = (vStart: number) => {
-    if (videoSrc) playerRef.current?.seekToTime(vStart);
-  };
+
 
   const handleSaveDraft = () => {
     if (!draft) return;
@@ -249,15 +246,9 @@ function Dashboard() {
             <VdiFlowDiagram stepTimes={stepTimes} />
           </section>
 
-          {/* 2. Chart + video side by side */}
-          <section className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-            <CycleTimeChart
-              cycles={cycles}
-              onCycleClick={videoSrc ? handleCycleClick : undefined}
-              selectedEvent={selectedEvent}
-              onCloseSelected={() => setSelectedEvent(null)}
-            />
-            <div className="rounded-xl bg-card border border-border shadow-[var(--shadow-card)] p-5">
+          {/* 2. Video (wide, left) + KPI 2x2 (right) */}
+          <section className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+            <div className="lg:col-span-2 rounded-xl bg-card border border-border shadow-[var(--shadow-card)] p-5">
               <div className="mb-3">
                 <h3 className="text-sm font-semibold text-foreground">
                   Szenario-Video
@@ -271,17 +262,6 @@ function Dashboard() {
                 src={videoSrc}
                 videoDuration={videoDuration}
                 events={events}
-              />
-            </div>
-          </section>
-
-          {/* 3. Event feed + KPI 2x2 grid */}
-          <section className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-            <div className="lg:col-span-2">
-              <EventFeed
-                events={events}
-                onEventClick={handleEventClick}
-                selectedEventId={selectedEvent?.id ?? null}
               />
             </div>
             <div className="grid grid-cols-2 gap-3 content-start">
@@ -315,6 +295,16 @@ function Dashboard() {
               />
             </div>
           </section>
+
+          {/* 3. Event feed — full width */}
+          <section>
+            <EventFeed
+              events={events}
+              onEventClick={handleEventClick}
+              selectedEventId={selectedEvent?.id ?? null}
+            />
+          </section>
+
         </div>
       </main>
     </div>

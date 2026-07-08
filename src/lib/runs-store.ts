@@ -7,6 +7,8 @@ import {
   type ProcessEvent,
   type Seed,
 } from "./mock-data";
+import demoVideoAsset from "@/assets/demo-analyse.mp4.asset.json";
+
 
 export interface VideoAsset {
   url: string;
@@ -60,6 +62,7 @@ function initSeeds() {
     const seed = SEEDS[line.id];
     if (!seed) continue;
     const id = `${line.id}-base`;
+    const isPrimary = line.id === LINES[0].id;
     const sz: Szenario = {
       id,
       lineId: line.id,
@@ -67,6 +70,14 @@ function initSeeds() {
       createdAt: Date.now() - 24 * 60 * 60 * 1000,
       cycles: seed.cycles,
       events: seed.events,
+      video: isPrimary
+        ? {
+            url: demoVideoAsset.url,
+            durationSec: 19.5,
+            filename: "demo-analyse.mp4",
+            sizeBytes: 4009301,
+          }
+        : undefined,
     };
     szenarien[id] = sz;
     szenarienByLine[line.id] = [id];

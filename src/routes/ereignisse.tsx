@@ -198,8 +198,12 @@ function WerkhallePage() {
                 {zones.map(({ slot, line, errorRate, status, hasData }) => {
                   const fill = STATUS_FILL[status];
                   return (
-                    <g key={slot.id} className="cursor-pointer">
-                      <Link to="/linien/$lineId" params={{ lineId: slot.id }}>
+                    <g
+                      key={slot.id}
+                      className="cursor-pointer"
+                      onClick={() => navigate({ to: "/linien/$lineId", params: { lineId: slot.id } })}
+                    >
+
                         <rect
                           x={slot.x}
                           y={slot.y}

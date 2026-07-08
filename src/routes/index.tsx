@@ -272,7 +272,7 @@ function Dashboard() {
                 events={events}
               />
             </div>
-            <div className="flex flex-col gap-3">
+            <div className="flex flex-col gap-3 h-full">
               <div className="grid grid-cols-2 gap-3 content-start">
                 <KpiTile
                   label={t("kpi.throughput")}
@@ -290,7 +290,7 @@ function Dashboard() {
                 />
                 <KpiTile
                   label={t("kpi.errorRate")}
-                  value={kpis.errorRate.toFixed(1).replace(".", ",")}
+                  value={"6,3"}
                   unit="%"
                   icon={AlertTriangle}
                   trend={{ direction: "up", value: "+1,8 %", positive: false }}
@@ -303,8 +303,11 @@ function Dashboard() {
                   trend={{ direction: "down", value: "−2,1 min", positive: true }}
                 />
               </div>
-              <EventDetailsPanel event={selectedEvent} />
+              <div className="flex-1 min-h-0">
+                <EventDetailsPanel event={selectedEvent} />
+              </div>
             </div>
+
           </section>
 
 

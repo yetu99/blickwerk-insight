@@ -120,9 +120,9 @@ function WerkhallePage() {
         </header>
 
         <div className="flex-1 p-6 space-y-6">
-          {/* Floor plan */}
+          {/* Floor plan — kompakter, dezentere Farben, gestrichelte Stationsverbindungen */}
           <section className="rounded-xl bg-card border border-border p-4 shadow-[var(--shadow-card)]">
-            <div className="w-full overflow-hidden rounded-lg bg-[color-mix(in_oklab,var(--muted)_60%,transparent)] border border-border">
+            <div className="w-full max-w-4xl mx-auto overflow-hidden rounded-lg bg-[color-mix(in_oklab,var(--muted)_60%,transparent)] border border-border">
               <svg
                 viewBox="0 0 1200 720"
                 className="w-full h-auto block"
@@ -151,8 +151,8 @@ function WerkhallePage() {
                   height="704"
                   fill="none"
                   stroke="var(--foreground)"
-                  strokeOpacity="0.35"
-                  strokeWidth="3"
+                  strokeOpacity="0.25"
+                  strokeWidth="2"
                   rx="6"
                 />
 
@@ -166,7 +166,7 @@ function WerkhallePage() {
                       height={z.h}
                       fill="var(--muted)"
                       stroke="var(--border)"
-                      strokeWidth="1.5"
+                      strokeWidth="1"
                       rx="6"
                     />
                     <text
@@ -197,133 +197,152 @@ function WerkhallePage() {
                 {/* Line zones */}
                 {zones.map(({ slot, line, errorRate, status, hasData }) => {
                   const fill = STATUS_FILL[status];
+                  // Station-Positionen entlang der Linie
+                  const stationXs = [0.15, 0.4, 0.65, 0.9].map(
+                    (f) => slot.x + 24 + (slot.w - 48) * f,
+                  );
+                  const midY = slot.y + slot.h / 2;
                   return (
                     <g
                       key={slot.id}
                       className="cursor-pointer"
                       onClick={() => navigate({ to: "/linien/$lineId", params: { lineId: slot.id } })}
                     >
+                      <rect
+                        x={slot.x}
+                        y={slot.y}
+                        width={slot.w}
+                        height={slot.h}
+                        fill={fill}
+                        fillOpacity={hasData ? 0.1 : 0.04}
+                        stroke={fill}
+                        strokeOpacity={0.5}
+                        strokeWidth={1.25}
+                        rx={8}
+                      />
 
-                        <rect
-                          x={slot.x}
-                          y={slot.y}
-                          width={slot.w}
-                          height={slot.h}
-                          fill={fill}
-                          fillOpacity={hasData ? 0.22 : 0.08}
-                          stroke={fill}
-                          strokeWidth={2.5}
-                          rx={8}
-                        />
-                        {/* Machine iconography — conveyor + stations */}
-                        <rect
-                          x={slot.x + 24}
-                          y={slot.y + slot.h / 2 - 8}
-                          width={slot.w - 48}
-                          height={16}
+                      {/* Segmentierte/gestrichelte Förderlinie zwischen Stationen */}
+                      {stationXs.slice(0, -1).map((cx, i) => {
+                        const nextX = stationXs[i + 1];
+                        return (
+                          <line
+                            key={i}
+                            x1={cx + 14}
+                            y1={midY}
+                            x2={nextX - 14}
+                            y2={midY}
+                            stroke={fill}
+                            strokeOpacity={0.6}
+                            strokeWidth={1.25}
+                            strokeDasharray="6 5"
+                            strokeLinecap="round"
+                          />
+                        );
+                      })}
+
+                      {/* Stationen als klare, abgesetzte Kreise */}
+                      {stationXs.map((cx, i) => (
+                        <circle
+                          key={i}
+                          cx={cx}
+                          cy={midY}
+                          r={11}
                           fill="var(--card)"
                           stroke={fill}
-                          strokeOpacity={0.6}
-                          strokeWidth={1}
-                          rx={2}
+                          strokeOpacity={0.75}
+                          strokeWidth={1.25}
                         />
-                        {[0.2, 0.45, 0.7].map((f, i) => (
-                          <circle
-                            key={i}
-                            cx={slot.x + 24 + (slot.w - 48) * f}
-                            cy={slot.y + slot.h / 2}
-                            r={12}
-                            fill="var(--card)"
-                            stroke={fill}
-                            strokeWidth={1.5}
-                          />
-                        ))}
+                      ))}
 
-                        {/* Header label */}
+                      {/* Header label */}
+                      <text
+                        x={slot.x + 20}
+                        y={slot.y + 28}
+                        fill="var(--foreground)"
+                        fontSize="15"
+                        fontWeight="700"
+                      >
+                        {line?.name ?? slot.id}
+                      </text>
+                      <text
+                        x={slot.x + 20}
+                        y={slot.y + 46}
+                        fill="var(--muted-foreground)"
+                        fontSize="11"
+                      >
+                        {line?.location} · {line?.camera_id}
+                      </text>
+
+                      {/* Big error rate badge on the right */}
+                      <g>
+                        <rect
+                          x={slot.x + slot.w - 160}
+                          y={slot.y + 14}
+                          width={140}
+                          height={54}
+                          rx={8}
+                          fill="var(--card)"
+                          stroke={fill}
+                          strokeOpacity={0.55}
+                          strokeWidth={1.25}
+                        />
                         <text
-                          x={slot.x + 20}
-                          y={slot.y + 28}
-                          fill="var(--foreground)"
-                          fontSize="15"
-                          fontWeight="700"
+                          x={slot.x + slot.w - 90}
+                          y={slot.y + 40}
+                          textAnchor="middle"
+                          fill={fill}
+                          fillOpacity={0.85}
+                          fontSize="22"
+                          fontWeight="800"
                         >
-                          {line?.name ?? slot.id}
+                          {hasData ? `${errorRate.toFixed(1).replace(".", ",")} %` : "—"}
                         </text>
                         <text
-                          x={slot.x + 20}
-                          y={slot.y + 46}
+                          x={slot.x + slot.w - 90}
+                          y={slot.y + 58}
+                          textAnchor="middle"
                           fill="var(--muted-foreground)"
-                          fontSize="11"
+                          fontSize="10"
+                          fontWeight="600"
+                          letterSpacing="0.5"
                         >
-                          {line?.location} · {line?.camera_id}
+                          FEHLERQUOTE
                         </text>
+                      </g>
 
-                        {/* Big error rate badge on the right */}
-                        <g>
-                          <rect
-                            x={slot.x + slot.w - 160}
-                            y={slot.y + 14}
-                            width={140}
-                            height={54}
-                            rx={8}
-                            fill="var(--card)"
-                            stroke={fill}
-                            strokeWidth={2}
-                          />
-                          <text
-                            x={slot.x + slot.w - 90}
-                            y={slot.y + 40}
-                            textAnchor="middle"
-                            fill={fill}
-                            fontSize="22"
-                            fontWeight="800"
-                          >
-                            {hasData ? `${errorRate.toFixed(1).replace(".", ",")} %` : "—"}
-                          </text>
-                          <text
-                            x={slot.x + slot.w - 90}
-                            y={slot.y + 58}
-                            textAnchor="middle"
-                            fill="var(--muted-foreground)"
-                            fontSize="10"
-                            fontWeight="600"
-                            letterSpacing="0.5"
-                          >
-                            FEHLERQUOTE
-                          </text>
-                        </g>
-
-                        {/* Status pill bottom-left */}
-                        <g>
-                          <rect
-                            x={slot.x + 20}
-                            y={slot.y + slot.h - 34}
-                            width={110}
-                            height={22}
-                            rx={11}
-                            fill={fill}
-                            fillOpacity={0.15}
-                            stroke={fill}
-                            strokeWidth={1}
-                          />
-                          <circle
-                            cx={slot.x + 32}
-                            cy={slot.y + slot.h - 23}
-                            r={4}
-                            fill={fill}
-                          />
-                          <text
-                            x={slot.x + 42}
-                            y={slot.y + slot.h - 19}
-                            fill={fill}
-                            fontSize="11"
-                            fontWeight="600"
-                          >
-                            {STATUS_LABEL[status]}
-                          </text>
-                        </g>
+                      {/* Status pill bottom-left */}
+                      <g>
+                        <rect
+                          x={slot.x + 20}
+                          y={slot.y + slot.h - 34}
+                          width={110}
+                          height={22}
+                          rx={11}
+                          fill={fill}
+                          fillOpacity={0.1}
+                          stroke={fill}
+                          strokeOpacity={0.5}
+                          strokeWidth={0.75}
+                        />
+                        <circle
+                          cx={slot.x + 32}
+                          cy={slot.y + slot.h - 23}
+                          r={4}
+                          fill={fill}
+                          fillOpacity={0.75}
+                        />
+                        <text
+                          x={slot.x + 42}
+                          y={slot.y + slot.h - 19}
+                          fill={fill}
+                          fillOpacity={0.85}
+                          fontSize="11"
+                          fontWeight="600"
+                        >
+                          {STATUS_LABEL[status]}
+                        </text>
+                      </g>
                     </g>
-
                   );
                 })}
               </svg>
@@ -332,6 +351,7 @@ function WerkhallePage() {
               Klick auf eine Linie öffnet die Detailansicht mit Fehleranalyse und Automatisierungspotenzial.
             </p>
           </section>
+
 
           {/* Zone list (accessible fallback + quick jump) */}
           <section className="grid grid-cols-1 md:grid-cols-3 gap-3">

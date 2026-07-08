@@ -225,11 +225,13 @@ function Dashboard() {
           </div>
           <button
             onClick={() => window.print()}
+            title="Im Druck-Dialog unter 'Weitere Einstellungen' die Option 'Kopf- und Fußzeilen' deaktivieren, damit URL und Seitenzahl nicht mit ausgegeben werden."
             className="inline-flex items-center gap-1.5 rounded-md border border-border bg-background px-3 py-1.5 text-xs font-medium text-foreground hover:bg-muted transition-colors no-print"
           >
             <Printer className="h-3.5 w-3.5" />
             Export (PDF)
           </button>
+
         </header>
 
         <div className="flex-1 p-6 space-y-6">

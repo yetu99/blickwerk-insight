@@ -7,10 +7,11 @@ import {
   iconForEventTitle,
 } from "./event-icons";
 
-const CATEGORY_ICON: Record<EventCategory, React.FC<{ size?: number }>> = {
+const CATEGORY_ICON: Record<EventCategory, FC<{ size?: number }>> = {
   Neutral: GearCheckIcon,
   Fehler: GearWarningIcon,
 };
+
 
 
 

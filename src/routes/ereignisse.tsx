@@ -1,7 +1,8 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useMemo } from "react";
 import { Factory, ArrowRight } from "lucide-react";
 import { BlickWerkSidebar } from "@/components/blickwerk/sidebar";
+
 import { LINES, computeKpis } from "@/lib/mock-data";
 import { useAllLines, useSzenarienForLine, getSzenarienForLine } from "@/lib/runs-store";
 

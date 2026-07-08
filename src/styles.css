@@ -152,3 +152,30 @@
     font-feature-settings: "cv02", "cv03", "cv04", "cv11";
   }
 }
+
+@media print {
+  .no-print,
+  .no-print-interactive,
+  aside {
+    display: none !important;
+  }
+  html, body {
+    background: white !important;
+    color: black !important;
+  }
+  main {
+    width: 100% !important;
+    max-width: none !important;
+  }
+  .rounded-xl, .rounded-lg, .rounded-md {
+    box-shadow: none !important;
+    break-inside: avoid;
+  }
+  .max-h-\[520px\] {
+    max-height: none !important;
+  }
+  header {
+    position: static !important;
+  }
+}
+

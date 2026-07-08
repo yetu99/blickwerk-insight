@@ -90,7 +90,7 @@ const EN: Dict = {
   "nav.neueAnalyse": "New Analysis",
   "nav.uebersicht": "Overview",
   "nav.linien": "Lines",
-  "nav.ereignisse": "Events",
+  "nav.ereignisse": "Workshop",
   "nav.automatisierungen": "Automations",
   "nav.einstellungen": "Settings",
   "sidebar.activeLine": "Active Line",

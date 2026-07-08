@@ -248,7 +248,7 @@ function Dashboard() {
                 Prozessablauf
               </h3>
               <p className="text-xs text-muted-foreground mt-0.5">
-                Gemessene Zeitspanne je Prozessschritt aus dem aktiven Szenario
+                Gemessene Zeiten je Prozessschritt aus dem aktiven Szenario
               </p>
             </div>
             <VdiFlowDiagram stepTimes={stepTimes} />

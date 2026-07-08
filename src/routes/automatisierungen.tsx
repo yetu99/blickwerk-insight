@@ -613,7 +613,7 @@ function TwinChat() {
   const [messages, setMessages] = useState<ChatMsg[]>([
     {
       role: "assistant",
-      text: "Frag mich zum Digital Twin – z. B. „Welche Station verursacht die höchste DLZ?"",
+      text: 'Frag mich zum Digital Twin – z. B. „Welche Station verursacht die höchste DLZ?"',
     },
   ]);
 

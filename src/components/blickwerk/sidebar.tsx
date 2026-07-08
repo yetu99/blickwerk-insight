@@ -71,7 +71,7 @@ export function BlickWerkSidebar({ activeLine }: { activeLine: Line }) {
       collapsed ? "justify-center px-2 py-2" : "gap-3 px-3 py-2"
     } ${
       active
-        ? "bg-sidebar-accent text-sidebar-accent-foreground border-l-2 border-primary"
+        ? "bg-sidebar-accent text-sidebar-accent-foreground border-l-2 border-muted-foreground/60"
         : "text-sidebar-foreground/80 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
     }`;
     const inner = (

@@ -7,6 +7,7 @@ import {
   Check,
   Clock,
   Loader2,
+  Send,
   Sparkles,
   Trash2,
   Zap,

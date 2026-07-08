@@ -288,8 +288,94 @@ function generateLine(line: Line, cfg: LineConfig): Seed {
 
 }
 
+interface HardcodedEvent {
+  start: number; // video seconds
+  end: number;
+  category: EventCategory;
+  title: string;
+  description: string;
+}
+
+const DEMO_EVENTS: HardcodedEvent[] = [
+  {
+    start: 0,
+    end: 3,
+    category: "Neutral",
+    title: "Gehäuse platziert",
+    description:
+      "Schwarzes Gehäuse aufgenommen und im Arbeitsbereich platziert.",
+  },
+  {
+    start: 3,
+    end: 7,
+    category: "Neutral",
+    title: "Zahnrad gelb platziert",
+    description:
+      "Gelbes Zahnrad aufgenommen und in korrekter Orientierung ins Gehäuse platziert.",
+  },
+  {
+    start: 7,
+    end: 11,
+    category: "Neutral",
+    title: "Zahnrad weiß platziert",
+    description:
+      "Weißes Zahnrad aufgenommen und ins Gehäuse platziert.",
+  },
+  {
+    start: 11,
+    end: 16,
+    category: "Fehler",
+    title: "Falsche Orientierung",
+    description:
+      "Weißes Zahnrad wurde in falscher Orientierung platziert, Korrekturschritt zur Neuausrichtung erforderlich.",
+  },
+  {
+    start: 16,
+    end: 19,
+    category: "Neutral",
+    title: "Getriebe abgelegt",
+    description:
+      "Fertig montiertes Getriebe wird ins Lager platziert und abgelegt.",
+  },
+];
+
+function buildDemoSeed(line: Line): Seed {
+  const wallEnd = Date.now();
+  const wallStart = wallEnd - 19_000;
+  const cycles: Cycle[] = DEMO_EVENTS.map((e, i) => ({
+    id: `${line.id}-demo-c-${i + 1}`,
+    line_id: line.id,
+    start_ts: wallStart + e.start * 1000,
+    end_ts: wallStart + e.end * 1000,
+    duration_sec: Math.round((e.end - e.start) * 100) / 100,
+    status: e.category === "Fehler" ? "error" : "ok",
+    video_timestamp_start: e.start,
+    video_timestamp_end: e.end,
+  }));
+  const events: ProcessEvent[] = DEMO_EVENTS.map((e, i) => ({
+    id: `${line.id}-demo-e-${i + 1}`,
+    line_id: line.id,
+    cycle_id: cycles[i].id,
+    category: e.category,
+    severity: e.category === "Fehler" ? "high" : "low",
+    timestamp: wallStart + e.start * 1000,
+    title: e.title,
+    description: e.description,
+    video_clip_url: null,
+    cluster_source: CATEGORY_TO_CLUSTER[e.category],
+    confidence: 0.92,
+    human_checkpoint_required: false,
+    video_timestamp_start: e.start,
+    video_timestamp_end: e.end,
+  }));
+  return { line, cycles, events };
+}
+
 export const SEEDS: Record<string, Seed> = Object.fromEntries(
-  LINES.map((l) => [l.id, generateLine(l, LINE_CONFIG[l.id])]),
+  LINES.map((l) => [
+    l.id,
+    l.id === "line-1" ? buildDemoSeed(l) : generateLine(l, LINE_CONFIG[l.id]),
+  ]),
 );
 
 // Legacy default export used by any single-line consumer.

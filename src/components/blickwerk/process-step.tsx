@@ -10,12 +10,7 @@ export type VdiIconKey =
   | "fuehren"
   | "orientieren"
   | "sortieren"
-  | "speichern"
-  | "picking"
-  | "legen"
-  | "einsetzen";
-
-const SVG_ICONS = new Set<VdiIconKey>(["picking", "legen", "einsetzen"]);
+  | "speichern";
 
 export interface ProcessStepProps {
   icon: VdiIconKey;
@@ -24,14 +19,13 @@ export interface ProcessStepProps {
 }
 
 export function ProcessStep({ icon, label, duration }: ProcessStepProps) {
-  const ext = SVG_ICONS.has(icon) ? "svg" : "png";
   return (
     <div className="flex flex-col items-center shrink-0 w-24">
       <div className="text-[10px] tabular-nums text-muted-foreground h-4">
         {duration ?? ""}
       </div>
       <img
-        src={`/vdi2860/${icon}.${ext}`}
+        src={`/vdi2860/${icon}.png`}
         alt={label}
         width={80}
         height={80}

@@ -9,9 +9,9 @@ interface StepDef {
 }
 
 const STEPS: StepDef[] = [
-  { icon: "picking", label: "Picking (Aufnehmen)", duration: "ca. 9,0 s" },
-  { icon: "legen", label: "Legen (Platzieren)", duration: "6,0 s" },
-  { icon: "einsetzen", label: "Einsetzen (Fügen)", duration: "ca. 4,0 s" },
+  { icon: "halten", label: "Picking (Aufnehmen)", duration: "8,7 s" },
+  { icon: "positionieren", label: "Legen (Platzieren)", duration: "6,3 s" },
+  { icon: "fuehren", label: "Einsetzen (Fügen)", duration: "4,2 s" },
 ];
 
 export function VdiFlowDiagram({ stepTimes: _stepTimes }: { stepTimes: StepTimeInfo[] }) {

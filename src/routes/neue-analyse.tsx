@@ -35,10 +35,10 @@ export const Route = createFileRoute("/neue-analyse")({
 });
 
 const STAGES = [
-  "Cluster 0 – Video-Zusammenfassung wird erstellt...",
-  "Cluster 1+2 – Stillstand & TIMWOODS-Analyse...",
-  "Cluster 3 – Produktionserfassung & Dokumentation...",
-  "Cluster 4 – Qualitätssicherung...",
+  "Video wird verarbeitet...",
+  "Ereignisse werden erkannt...",
+  "Zykluszeiten werden berechnet...",
+  "Prozessschritte werden zugeordnet...",
   "Ergebnisse werden aufbereitet...",
 ];
 
@@ -85,43 +85,20 @@ function NeueAnalyse() {
   useEffect(() => {
     if (!running) return;
     if (stage >= STAGES.length) {
-      if (!prepared) return;
-      const seed = generateRun("draft", prepared.durationSec);
-      setDraft({
-        targetLineId: targetLineId === NEW_LINE_SENTINEL ? null : targetLineId,
-        newLine:
-          targetLineId === NEW_LINE_SENTINEL
-            ? {
-                name: newLineName.trim() || "Neue Linie",
-                location: newLineLocation.trim(),
-              }
-            : null,
-        label: label.trim(),
-        cycles: seed.cycles,
-        events: seed.events,
-        video: {
-          url: prepared.url,
-          durationSec: prepared.durationSec,
-          filename: prepared.file.name,
-          sizeBytes: prepared.file.size,
-        },
-        createdAt: Date.now(),
-      });
-      const t = setTimeout(() => navigate({ to: "/" }), 600);
+      // Fake analysis only — do NOT persist a draft or replace the embedded
+      // demo scenario. Simply navigate to the hardcoded overview.
+      const t = setTimeout(() => {
+        if (prepared) {
+          try { URL.revokeObjectURL(prepared.url); } catch { /* noop */ }
+        }
+        navigate({ to: "/" });
+      }, 600);
       return () => clearTimeout(t);
     }
-    const t = setTimeout(() => setStage((s) => s + 1), 1700);
+    // Per-stage duration ~2.5-3.5s → total ~12-18s across 5 stages.
+    const t = setTimeout(() => setStage((s) => s + 1), 2800);
     return () => clearTimeout(t);
-  }, [
-    running,
-    stage,
-    navigate,
-    prepared,
-    targetLineId,
-    newLineName,
-    newLineLocation,
-    label,
-  ]);
+  }, [running, stage, navigate, prepared]);
 
   const onSelectFile = (f: File | null) => {
     if (!f) return;

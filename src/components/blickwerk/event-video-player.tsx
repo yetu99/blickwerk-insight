@@ -181,9 +181,9 @@ export const SzenarioVideoPlayer = forwardRef<SzenarioVideoHandle, Props>(
           />
         </div>
 
-        {/* Custom track with markers + highlight */}
-        <div className="relative h-8 select-none">
-          <div className="absolute inset-x-0 top-1/2 -translate-y-1/2 h-1.5 rounded-full bg-muted" />
+        {/* Custom track with markers + highlight — full width, live-bound */}
+        <div className="relative w-full h-8 select-none">
+          <div className="absolute left-0 right-0 top-1/2 -translate-y-1/2 h-1.5 rounded-full bg-muted" />
           {highlight && (
             <div
               className="absolute top-1/2 -translate-y-1/2 h-2.5 rounded-sm bg-primary/25 border border-primary/60 transition-opacity"
@@ -193,10 +193,10 @@ export const SzenarioVideoPlayer = forwardRef<SzenarioVideoHandle, Props>(
               }}
             />
           )}
-          {/* Progress fill */}
+          {/* Progress fill — bound to video's timeupdate via setCurrent */}
           <div
-            className="absolute top-1/2 -translate-y-1/2 h-1.5 rounded-full bg-primary/70"
-            style={{ width: `${(current / total) * 100}%` }}
+            className="absolute left-0 top-1/2 -translate-y-1/2 h-1.5 rounded-full bg-primary"
+            style={{ width: `${Math.min(100, Math.max(0, (current / total) * 100))}%` }}
           />
           {/* Markers */}
           {events.map((e) => {

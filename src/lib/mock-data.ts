@@ -1,9 +1,4 @@
-export type EventCategory =
-  | "Fehlgriff"
-  | "Farbverwechslung"
-  | "Taktzeitueberschreitung"
-  | "Zoegern"
-  | "Prozessunterbrechung";
+export type EventCategory = "Neutral" | "Fehler";
 
 export type Severity = "low" | "medium" | "high";
 
@@ -35,11 +30,8 @@ export type ClusterSource =
   | "tracker";
 
 export const CATEGORY_TO_CLUSTER: Record<EventCategory, ClusterSource> = {
-  Fehlgriff: "timwoods_motion",
-  Farbverwechslung: "timwoods_defects",
-  Taktzeitueberschreitung: "tracker",
-  Zoegern: "timwoods_skills",
-  Prozessunterbrechung: "waiting",
+  Neutral: "tracker",
+  Fehler: "timwoods_defects",
 };
 
 export const CLUSTER_LABELS: Record<ClusterSource, string> = {
@@ -58,6 +50,7 @@ export interface ProcessEvent {
   category: EventCategory;
   severity: Severity;
   timestamp: number;
+  title?: string;
   description: string;
   video_clip_url: string | null;
   cluster_source: ClusterSource;
@@ -70,21 +63,15 @@ export interface ProcessEvent {
 
 
 export const CATEGORY_LABELS: Record<EventCategory, string> = {
-  Fehlgriff: "Fehlgriff",
-  Farbverwechslung: "Farbverwechslung",
-  Taktzeitueberschreitung: "Taktzeitüberschreitung",
-  Zoegern: "Zögern",
-  Prozessunterbrechung: "Prozessunterbrechung",
+  Neutral: "Neutral",
+  Fehler: "Fehler",
 };
 
 export type ProcessStep = "Pick" | "Place" | "Kontrolle" | "Korrektur";
 
 export const CATEGORY_TO_STEP: Record<EventCategory, ProcessStep> = {
-  Fehlgriff: "Pick",
-  Zoegern: "Pick",
-  Taktzeitueberschreitung: "Place",
-  Farbverwechslung: "Kontrolle",
-  Prozessunterbrechung: "Korrektur",
+  Neutral: "Place",
+  Fehler: "Kontrolle",
 };
 
 export const PROCESS_STEPS: ProcessStep[] = ["Pick", "Place", "Kontrolle", "Korrektur"];

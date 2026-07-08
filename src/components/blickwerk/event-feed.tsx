@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState, type FC } from "react";
 import type { ProcessEvent, EventCategory, Severity } from "@/lib/mock-data";
 import { CATEGORY_LABELS } from "@/lib/mock-data";
 import {
@@ -7,10 +7,11 @@ import {
   iconForEventTitle,
 } from "./event-icons";
 
-const CATEGORY_ICON: Record<EventCategory, (props: { size?: number }) => JSX.Element> = {
+const CATEGORY_ICON: Record<EventCategory, React.FC<{ size?: number }>> = {
   Neutral: GearCheckIcon,
   Fehler: GearWarningIcon,
 };
+
 
 
 const CATEGORY_COLOR: Record<EventCategory, string> = {

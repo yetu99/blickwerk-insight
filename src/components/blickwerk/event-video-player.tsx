@@ -18,6 +18,7 @@ interface Props {
 
 export interface SzenarioVideoHandle {
   seekTo: (event: ProcessEvent) => void;
+  seekToTime: (seconds: number) => void;
 }
 
 const CATEGORY_DOT: Record<EventCategory, string> = {

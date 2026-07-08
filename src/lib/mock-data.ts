@@ -115,39 +115,21 @@ export function computeStepTimes(cycles: Cycle[]): StepTimeInfo[] {
 }
 
 const CATEGORY_DESCRIPTIONS: Record<EventCategory, string[]> = {
-  Fehlgriff: [
-    "Bauteil fiel beim Aufnehmen aus dem Greifer.",
-    "Greifer erfasste Teil seitlich, Position korrigiert.",
-    "Zweiter Griffversuch nach Fehlpositionierung nötig.",
+  Neutral: [
+    "Bauteil regulär platziert.",
+    "Aufnahme und Ablage ohne Auffälligkeit.",
+    "Schritt ordnungsgemäß abgeschlossen.",
   ],
-  Farbverwechslung: [
-    "Grüne Flasche im Fach für Braunglas erkannt.",
-    "Braune Flasche im Weißglas-Kasten platziert.",
-    "Sortierabweichung: falsche Farbzuordnung Position 4.",
-  ],
-  Taktzeitueberschreitung: [
-    "Zyklus überschritt Zielzeit deutlich.",
-    "Verlängerte Dauer durch Nachjustierung.",
-    "Taktzeit über Schwellwert – Ursache unklar.",
-  ],
-  Zoegern: [
-    "Bediener verharrte 3.2 s vor Übergabe.",
-    "Unterbrechung im Bewegungsablauf am Übergabepunkt.",
-    "Zögern erkannt: Blick zur Anzeige während des Griffs.",
-  ],
-  Prozessunterbrechung: [
-    "Förderband für 12 s ohne erkennbare Ursache gestoppt.",
-    "Bediener verließ Sichtfeld während laufender Sortierung.",
-    "Manueller Eingriff am Bandantrieb erforderlich.",
+  Fehler: [
+    "Bauteil in falscher Orientierung platziert.",
+    "Fehlgriff beim Aufnehmen, Korrektur nötig.",
+    "Position weicht vom Zielrahmen ab.",
   ],
 };
 
 const SEVERITY_BY_CATEGORY: Record<EventCategory, Severity[]> = {
-  Fehlgriff: ["medium", "high"],
-  Farbverwechslung: ["high", "high", "medium"],
-  Taktzeitueberschreitung: ["low", "medium"],
-  Zoegern: ["low", "low", "medium"],
-  Prozessunterbrechung: ["high", "medium"],
+  Neutral: ["low"],
+  Fehler: ["medium", "high"],
 };
 
 function mulberry32(seed: number) {
@@ -199,7 +181,7 @@ const LINE_CONFIG: Record<string, LineConfig> = {
     baseDuration: 4,
     jitter: 2,
     errorRate: 0.15,
-    dominantCategory: "Farbverwechslung",
+    dominantCategory: "Fehler",
     dominantWeight: 0.45,
     cycleCount: 200,
   },
@@ -208,7 +190,7 @@ const LINE_CONFIG: Record<string, LineConfig> = {
     baseDuration: 11,
     jitter: 4,
     errorRate: 0.09,
-    dominantCategory: "Fehlgriff",
+    dominantCategory: "Fehler",
     dominantWeight: 0.55,
     cycleCount: 90,
   },
@@ -217,7 +199,7 @@ const LINE_CONFIG: Record<string, LineConfig> = {
     baseDuration: 7,
     jitter: 3,
     errorRate: 0.22,
-    dominantCategory: "Zoegern",
+    dominantCategory: "Fehler",
     dominantWeight: 0.5,
     cycleCount: 140,
   },
@@ -230,13 +212,7 @@ export interface Seed {
 }
 
 
-const CATEGORIES: EventCategory[] = [
-  "Fehlgriff",
-  "Farbverwechslung",
-  "Taktzeitueberschreitung",
-  "Zoegern",
-  "Prozessunterbrechung",
-];
+const CATEGORIES: EventCategory[] = ["Neutral", "Fehler"];
 
 function generateLine(line: Line, cfg: LineConfig): Seed {
   const rand = mulberry32(cfg.seed);

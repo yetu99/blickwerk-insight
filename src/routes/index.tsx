@@ -12,7 +12,6 @@ import {
 import { toast } from "sonner";
 import { BlickWerkSidebar } from "@/components/blickwerk/sidebar";
 import { KpiTile } from "@/components/blickwerk/kpi-tile";
-import { CycleTimeChart } from "@/components/blickwerk/cycle-time-chart";
 import { EventFeed } from "@/components/blickwerk/event-feed";
 import {
   SzenarioVideoPlayer,
@@ -138,9 +137,9 @@ function Dashboard() {
       playerRef.current?.seekTo(e);
     }
   };
-  const handleCycleClick = (vStart: number) => {
-    if (videoSrc) playerRef.current?.seekToTime(vStart);
-  };
+  // Legacy cycle-click handler removed with CycleTimeChart.
+  void handleEventClick;
+
 
   const handleSaveDraft = () => {
     if (!draft) return;

@@ -322,8 +322,8 @@ function WerkhallePage() {
                             {STATUS_LABEL[status]}
                           </text>
                         </g>
-                      </Link>
                     </g>
+
                   );
                 })}
               </svg>

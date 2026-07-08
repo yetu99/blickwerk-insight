@@ -7,7 +7,6 @@ import {
   Check,
   Clock,
   Loader2,
-  Send,
   Sparkles,
   Trash2,
   Zap,
@@ -231,10 +230,7 @@ function AutomatisierungPage() {
             />
           </section>
 
-          {/* Frag den Digital Twin */}
-          <TwinChat />
-
-
+          {/* Digital-Twin-Visualisierung */}
           <section className="rounded-xl border border-border bg-card shadow-[var(--shadow-card)] overflow-hidden">
             <div className="flex items-center justify-between px-5 py-3 border-b border-border">
               <div>
@@ -601,86 +597,4 @@ function DeltaCard({
 
 function truncate(s: string, n: number) {
   return s.length > n ? s.slice(0, n - 1) + "…" : s;
-}
-
-interface ChatMsg {
-  role: "user" | "assistant";
-  text: string;
-}
-
-function TwinChat() {
-  const [input, setInput] = useState("");
-  const [messages, setMessages] = useState<ChatMsg[]>([
-    {
-      role: "assistant",
-      text: 'Frag mich zum Digital Twin – z. B. „Welche Station verursacht die höchste DLZ?"',
-    },
-  ]);
-
-  const submit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!input.trim()) return;
-    setMessages((m) => [
-      ...m,
-      { role: "user", text: input },
-      {
-        role: "assistant",
-        text: "Antworten werden generiert, sobald die Digital-Twin-Analyse angebunden ist. (Demo)",
-      },
-    ]);
-    setInput("");
-  };
-
-  return (
-    <section className="rounded-xl border border-border bg-card shadow-[var(--shadow-card)] overflow-hidden">
-      <div className="flex items-center gap-2 px-5 py-3 border-b border-border">
-        <div className="h-7 w-7 rounded-md bg-primary/10 flex items-center justify-center">
-          <Sparkles className="h-3.5 w-3.5 text-primary" />
-        </div>
-        <div>
-          <h2 className="text-sm font-semibold text-foreground">
-            Frag den Digital Twin
-          </h2>
-          <p className="text-[11px] text-muted-foreground">
-            Natürlichsprachige Abfrage zu Linie, KPIs und Simulationen
-          </p>
-        </div>
-      </div>
-      <div className="max-h-64 overflow-y-auto px-5 py-3 space-y-2">
-        {messages.map((m, i) => (
-          <div
-            key={i}
-            className={`flex ${m.role === "user" ? "justify-end" : "justify-start"}`}
-          >
-            <div
-              className={`max-w-[85%] rounded-lg px-3 py-2 text-sm leading-relaxed ${
-                m.role === "user"
-                  ? "bg-primary text-primary-foreground"
-                  : "bg-muted text-foreground"
-              }`}
-            >
-              {m.text}
-            </div>
-          </div>
-        ))}
-      </div>
-      <form onSubmit={submit} className="p-3 border-t border-border">
-        <div className="flex items-center gap-2 rounded-md border border-border bg-background px-3 py-2 focus-within:border-primary transition-colors">
-          <input
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            placeholder="Frage stellen…"
-            className="flex-1 bg-transparent text-sm outline-none placeholder:text-muted-foreground"
-          />
-          <button
-            type="submit"
-            className="h-7 w-7 rounded-md bg-primary text-primary-foreground flex items-center justify-center hover:opacity-90 transition-opacity"
-            aria-label="Senden"
-          >
-            <Send className="h-3.5 w-3.5" />
-          </button>
-        </div>
-      </form>
-    </section>
-  );
 }

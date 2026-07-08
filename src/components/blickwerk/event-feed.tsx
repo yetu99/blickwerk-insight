@@ -160,7 +160,14 @@ export function EventFeed({ events, onEventClick, selectedEventId }: Props) {
                             </span>
                           )}
                         </div>
-                        <p className="text-sm text-foreground truncate">{e.description}</p>
+                        {e.title ? (
+                          <>
+                            <p className="text-sm font-medium text-foreground truncate">{e.title}</p>
+                            <p className="text-xs text-muted-foreground truncate mt-0.5">{e.description}</p>
+                          </>
+                        ) : (
+                          <p className="text-sm text-foreground truncate">{e.description}</p>
+                        )}
                       </div>
                     </div>
                   </button>
